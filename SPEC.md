@@ -156,16 +156,18 @@ stdout.
     still scores.
 11. The three `pdftotext` pools parse to Technician 409, General 423, Extra 599,
     with the same IDs, answers and references as the parser they replace.
-11a. No pool gains or loses a question against the parser being replaced, and
-    no answer letter or rule reference changes. Bodies may differ only in
-    where their newlines fall, never in their words.
+11a. On those three pools, no question is gained or lost against the parser
+    being replaced, and no answer letter or rule reference changes. Bodies
+    differ only in where their newlines fall, never in their words.
+11b. No body ends with a `~~`, and none contains text belonging to the next
+    question. A question's content stops at its terminator.
 12. A copy-paste of the Extra pool taken from a PDF viewer parses to the same
     599 questions and the same answers as its PDF.
 12a. A pool whose body does not open with a usable `[TGE]1A01` is refused.
 12b. Front matter yields no questions: no header before the anchor is parsed.
-14. Each missed question is followed by exactly one search hyperlink, and a
+13. Each missed question is followed by exactly one search hyperlink, and a
     correctly answered question by none.
-15. The search query is the question sentence with no answer choices in it, for
+14. The search query is the question sentence with no answer choices in it, for
     every question in all three pools.
 
 ## Out of scope
