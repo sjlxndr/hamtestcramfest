@@ -40,9 +40,6 @@ brew install poppler                        # macOS
 winget install -e --id Schard.Poppler       # Windows
 ```
 
-Windows has no `pdftotext` of its own; poppler there is a third-party build.
-The winget package puts it on `PATH`, which is where the script looks.
-
 Without it, the script tells you so and exits.
 
 You can skip installing anything. Open the pool PDF, select all of it, paste it
@@ -61,6 +58,20 @@ default on one question's wording, so there is no reason to prefer it.
 
 When given a PDF, the script writes the text dump alongside it and reuses it on
 later runs, falling back to a temporary file if that directory is not writable.
+
+## On Windows
+
+**Use Windows Terminal, not the old console host.**
+
+Each missed question ends with a clickable link to a web search for it. That is
+a terminal hyperlink, and Windows Terminal renders it as one. The legacy console
+that `cmd.exe` opens on older systems does not, and shows the escape characters
+as junk around the label instead. Nothing else depends on it, so the exam still
+runs either way, but the report is unpleasant to read.
+
+Windows ships no `pdftotext`; poppler there is a third-party build. The winget
+package above puts it on `PATH`, which is where the script looks for it. Or skip
+it entirely and paste the pool out of your PDF viewer, as described above.
 
 ## Diagrams are not shown
 
