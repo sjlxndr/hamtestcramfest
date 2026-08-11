@@ -34,6 +34,7 @@ import datetime
 import tempfile
 import subprocess
 import collections
+import urllib.parse
 
 _ID = r'[TGE][0-9][A-Z][0-9]{2}'
 
@@ -73,6 +74,8 @@ ELEMENTS = {"T": "technician", "G": "general", "E": "extra"}
 
 # Opens an answers file, naming the pool the answers were given against.
 POOL_HEADER = "# pool:"
+
+SEARCH_URL = "https://www.google.com/search?q="
 
 
 def find_pdftotext():
@@ -232,6 +235,27 @@ def read_answers(path):
     return recorded, given
 
 
+def asked(body):
+    """The question itself, without its answer choices.
+
+    Choices are dropped so the search query is the question and nothing
+    else; every question in every pool opens its choices with an "A." line.
+    """
+    question = body.split("\n")
+    cut = next(i for i, line in enumerate(question) if re.match(r'A\.\s', line))
+    return " ".join(question[:cut]).strip()
+
+
+def explain_link(body, label="Explain this question"):
+    """An OSC 8 hyperlink to a search for the question.
+
+    Terminals that do not understand OSC 8 print the label alone, so the
+    line stays readable either way.
+    """
+    query = urllib.parse.quote_plus(f"Explain this ham radio question: {asked(body)}")
+    return f"\033]8;;{SEARCH_URL}{query}\033\\{label}\033]8;;\033\\"
+
+
 def report(given, pool):
     unknown = [qid for qid, _ in given if qid not in pool]
     if unknown:
@@ -262,6 +286,7 @@ def report(given, pool):
         answer, _reference, body = pool[qid]
         print(f"\n[{qid}] you answered {ans}, correct is {answer}")
         print(body)
+        print(explain_link(body))
 
 
 def prompt(label, default=None):

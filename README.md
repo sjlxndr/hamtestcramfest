@@ -104,6 +104,11 @@ its pool as `unrecorded`.
 The report gives your score, pass or fail, a per-subelement breakdown, and every
 missed question with the correct answer.
 
+Each missed question ends with an **Explain this question** link. Click it and
+your browser searches for an explanation of that question. It is a terminal
+hyperlink, so it needs a terminal that supports them — most modern ones do, and
+those that do not simply show the words without the link.
+
 ## Running it bare
 
 Run it with no arguments and it prompts for what it needs, offering a
