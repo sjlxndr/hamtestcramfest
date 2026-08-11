@@ -144,14 +144,24 @@ E5-1, E6-1 through E6-3, E7-1 through E7-3, then jumps to E9-1, so nothing about
 the sequence is derivable, and a wrong figure shown confidently is worse than no
 figure at all.
 
-Two OCR passes are required, not one. The default segmentation mode fails on the
-small Smith chart of E9-3, and `--psm 11` fails on E6-3; each alone reads 13 of
-the 14 figures across the three pools, and they fail on different images.
+An image that the default segmentation mode cannot read is retried once with
+`--psm 11`, per image rather than as a second pass over all of them. Thirteen of
+the fourteen figures across the three pools read first time; only E9-3's small
+Smith chart needs the retry, and Technician and General never reach it. The
+retry earns its place because the two modes fail on different images: `--psm 11`
+alone would lose E6-3.
 
-**Where figures are unavailable, they are absent, not guessed.** A text pool has
-no images in it. A machine without tesseract cannot identify what it extracted.
-In both cases the question is asked with no figure link and the exam is
-otherwise unaffected.
+**A figure that cannot be linked is named instead, never guessed.** Where the
+question refers to a figure the script cannot offer, it prints `Refer to PDF for
+Figure T-1` in the link's place. The question always states which figure it
+wants, so the reader can be told exactly what to look up even when the image
+itself is unavailable.
+
+This is decided per figure, not per run. A pool whose captions mostly read gives
+links for those and the fallback line for the rest, within the same exam. The
+whole-run cases fall out of the same rule: a text pool has no images, and a
+machine without tesseract cannot identify what it extracted, so every affected
+question gets the fallback line.
 
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
@@ -221,8 +231,11 @@ stdout.
     12 questions in Technician, 5 in General, 27 in Extra.
 17. Soft masks are never offered as figures. Extra yields twenty extracted
     files and exactly ten figures.
-18. A text pool, and a machine without tesseract, each produce no figure links
-    and no error.
+18. A figure that cannot be linked prints `Refer to PDF for Figure <name>`
+    instead, naming the figure the question asked for.
+19. Links and fallback lines may mix within one exam, decided per figure.
+20. A text pool, and a machine without tesseract, produce the fallback line for
+    every affected question and no error.
 
 ## Out of scope
 
@@ -248,8 +261,8 @@ stdout.
 ## Assumptions
 
 - Figure captions are rendered into the images and are legible to OCR. True of
-  all fourteen figures in the three pools in hand, read in about three and a
-  half seconds per pool, once, and cached after.
+  all fourteen figures in the three pools in hand: thirteen on the first
+  attempt, one on the retry, about two seconds per pool, once, cached after.
 - Character handling never raises. Correctness of the displayed text is
   secondary to the exam running: 312 bytes of the Technician pool are curly
   quotes and en-dashes, none of which the parser needs, so degrading them costs
