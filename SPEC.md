@@ -61,15 +61,22 @@ Answer choices keep their pool letters and are not reordered.
 
 **Answer recording.** Answers are held in memory for the duration of the exam
 and scored from there, never re-read from disk. A completed exam is written in a
-single pass to `<element>_answers_<timestamp>.txt` in the working directory, one
-`<question ID> <letter>` line per question. Answering `q` abandons the attempt:
-nothing is written and nothing is scored.
+single pass to `<element>_answers_<timestamp>.txt` in the working directory: a
+`# pool: <filename>` header naming the pool the answers were given against, then
+one `<question ID> <letter>` line per question. Answering `q` abandons the
+attempt: nothing is written and nothing is scored.
 
 The path is not configurable. An auto-named file cannot collide with the pool or
-its text dump, so there is no overwrite to guard against, and the element in the
-name is the only pool identity carried anywhere: it tells the reader which pool
-to hand back to `--score`. It does not distinguish two releases of the same
-element, which can differ in the correct answer under a shared question ID.
+its text dump, so there is no overwrite to guard against. The element in the
+filename says which pool to reach for; the header says which release, recording
+the pool's own filename with symlinks resolved, because that filename carries
+the release date range and a question ID does not.
+
+`--score` prints the recorded pool alongside the one it is scoring against, so a
+mismatch is visible. It does not refuse to score on one: a pool file can be
+renamed or moved, and the same release read as PDF or as a text dump records two
+different names. Reading tolerates a file with no header and ignores any `#`
+line.
 
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
@@ -102,6 +109,9 @@ stdout.
 8. `README.md` names the figure limitation and the `pdftotext` prerequisite.
 9. A completed exam writes `technician_answers_*.txt`, `general_answers_*.txt`
    or `extra_answers_*.txt` according to the pool it was drawn from.
+10. That file opens with `# pool: <the pool's own filename>`, and `--score`
+    prints it next to the pool being scored against. A file without the header
+    still scores.
 
 ## Out of scope
 

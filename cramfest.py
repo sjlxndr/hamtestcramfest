@@ -55,6 +55,9 @@ VALID = ("A", "B", "C", "D")
 # Question ID prefixes, matching QUESTION's character class.
 ELEMENTS = {"T": "technician", "G": "general", "E": "extra"}
 
+# Opens an answers file, naming the pool the answers were given against.
+POOL_HEADER = "# pool:"
+
 
 def find_pdftotext():
     for path in PDFTOTEXT_PATHS:
@@ -69,6 +72,15 @@ def find_pdftotext():
         "macOS: brew install poppler), or pass a text dump of the pool with "
         "--pool pool.txt instead."
     )
+
+
+def pool_name(pool_path):
+    """The pool's own filename, which carries its release date range.
+
+    Symlinks are resolved: the link's name identifies nothing, while the
+    target's distinguishes one release of an element from the next.
+    """
+    return os.path.basename(os.path.realpath(pool_path))
 
 
 def dump_path(pool_path):
@@ -153,7 +165,7 @@ def ask(qid, position, total, reference, body):
         print(f"Enter one of {', '.join(VALID)}, or 'q'.")
 
 
-def take_exam(pool, out_path, rng):
+def take_exam(pool, pool_path, out_path, rng):
     exam = build_exam(pool, rng)
     print(f"{len(exam)} questions, one from each group. "
           f"{pass_mark(len(exam))} correct to pass.")
@@ -170,19 +182,28 @@ def take_exam(pool, out_path, rng):
         given.append((qid, answer))
 
     with open(out_path, "w") as out:
+        out.write(f"{POOL_HEADER} {pool_name(pool_path)}\n")
         for qid, answer in given:
             out.write(f"{qid} {answer}\n")
     return given
 
 
 def read_answers(path):
+    """Return the pool named in the header, or None, and the answers."""
+    recorded = None
     given = []
     with open(path) as f:
         for line in f:
-            if line.strip():
-                qid, answer = line.split()[:2]
-                given.append((qid, answer.upper()))
-    return given
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("#"):
+                if line.startswith(POOL_HEADER):
+                    recorded = line[len(POOL_HEADER):].strip()
+                continue
+            qid, answer = line.split()[:2]
+            given.append((qid, answer.upper()))
+    return recorded, given
 
 
 def report(given, pool):
@@ -256,11 +277,14 @@ def main():
     args = parse_args()
 
     if args.score:
-        report(read_answers(args.score), load_pool(args.pool))
+        recorded, given = read_answers(args.score)
+        print(f"Answers recorded against: {recorded or 'unrecorded'}")
+        print(f"Scoring against:          {pool_name(args.pool)}")
+        report(given, load_pool(args.pool))
         return
 
     pool = load_pool(args.pool)
-    given = take_exam(pool, answers_path(pool), random.Random())
+    given = take_exam(pool, args.pool, answers_path(pool), random.Random())
     if given is not None:
         report(given, pool)
 

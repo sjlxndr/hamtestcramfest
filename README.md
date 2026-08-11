@@ -72,11 +72,34 @@ Score a saved file later without retaking the exam:
 python3 cramfest.py --pool pool.pdf --score technician_answers_2026-08-11_130945.txt
 ```
 
-Scoring needs the pool the exam came from, because the file records question IDs
-and nothing else. The element in the filename tells you which pool that is, but
-**it cannot tell two releases of the same element apart** — question IDs are
-reused between releases and the correct answer can change underneath one. Score
-against the pool you sat, not merely the current one.
+**Score an answers file against the same pool you sat.** Not merely the same
+element: the same release. A question ID like `T1C01` names a slot in the pool's
+structure, not a question for all time, so every four-yearly release reuses the
+same IDs for different questions. Score a 2026-2030 Technician attempt against
+the 2030-2034 pool and every ID resolves, nothing looks wrong, and the result is
+meaningless. Scoring against the wrong *element* is safe by comparison, because
+it fails outright.
+
+So the answers file opens with a line naming the pool it was sat against:
+
+```
+# pool: 2026-2030 Technician Pool and Syllabus Public Release Feb 19 2026.pdf
+T5C11 A
+T0A01 A
+```
+
+`--score` prints that alongside the pool you handed it, so a mismatch is
+something you can see:
+
+```
+Answers recorded against: 2026-2030 Technician Pool ... Feb 19 2026.pdf
+Scoring against:          2026-2030 Technician Pool ... Feb 19 2026.pdf
+```
+
+It reports rather than refuses, because the two names can differ innocently —
+you renamed the pool, or sat it from the PDF and are scoring from the text dump.
+Read the two lines and judge. A file with no header scores normally and reports
+its pool as `unrecorded`.
 
 The report gives your score, pass or fail, a per-subelement breakdown, and every
 missed question with the correct answer.
