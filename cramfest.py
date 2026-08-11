@@ -153,11 +153,11 @@ def ask(qid, position, total, reference, body):
         print(f"Enter one of {', '.join(VALID)}, or 'q'.")
 
 
-def take_exam(pool, answers_path, rng):
+def take_exam(pool, out_path, rng):
     exam = build_exam(pool, rng)
     print(f"{len(exam)} questions, one from each group. "
           f"{pass_mark(len(exam))} correct to pass.")
-    print(f"Answers are saved to {answers_path} when you finish.")
+    print(f"Answers are saved to {out_path} when you finish.")
 
     given = []
     for position, qid in enumerate(exam, 1):
@@ -169,7 +169,7 @@ def take_exam(pool, answers_path, rng):
             return None
         given.append((qid, answer))
 
-    with open(answers_path, "w") as out:
+    with open(out_path, "w") as out:
         for qid, answer in given:
             out.write(f"{qid} {answer}\n")
     return given
