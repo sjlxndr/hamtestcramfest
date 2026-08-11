@@ -15,6 +15,11 @@ python3 cramfest.py --pool "2026-2030 Technician Pool ... .pdf"
 The pool is not included here. Download the current one from the NCVEC and pass
 it with `--pool`. Both the released PDF and a plain text dump of it work.
 
+https://ncvec.org/index.php/amateur-question-pools
+
+The Technician, General and Extra pools are each reached through that page's
+menu items.
+
 Because the exam shape is read from the pool rather than hardcoded, the same
 script covers Technician, General and Extra. Technician has 35 subelement
 groups, so a Technician exam is 35 questions; point it at another element's
