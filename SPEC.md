@@ -126,8 +126,11 @@ pass/fail against `ceil(0.74 x exam length)`, a per-subelement breakdown, and
 each missed question with the correct answer.
 
 Every missed question carries a link to a web search for an explanation of it.
-The query is the question sentence alone, with its answer choices dropped, since
-the choices are noise a search engine matches badly. The link is an OSC 8
+The query is the question ID followed by the question sentence, with the answer
+choices dropped, since the choices are noise a search engine matches badly. The
+ID leads because study sites index the pool by it, which finds material on that
+exact question rather than the topic at large, and is what makes the link useful
+on a diagram question the script cannot render. The link is an OSC 8
 terminal hyperlink, so the line reads as its label rather than as a URL;
 terminals that do not understand OSC 8 print the label alone and lose nothing
 but the link. Correct answers get no link.

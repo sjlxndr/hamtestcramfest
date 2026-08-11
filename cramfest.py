@@ -282,13 +282,16 @@ def asked(body):
     return " ".join(question[:cut]).strip()
 
 
-def explain_link(body):
+def explain_link(qid, body):
     """An OSC 8 hyperlink to a search for the question.
 
-    Terminals that do not understand OSC 8 print the label alone, so the
-    line stays readable either way.
+    The question ID leads the query: study sites index the pool by it, so
+    it finds material about this exact question rather than the topic in
+    general. Terminals that do not understand OSC 8 print the label alone,
+    so the line stays readable either way.
     """
-    query = urllib.parse.quote_plus(f"Explain this ham radio question: {asked(body)}")
+    query = urllib.parse.quote_plus(
+        f"Explain this ham radio question: {qid} {asked(body)}")
     return f"\033]8;;{SEARCH_URL}{query}\033\\Explain this question\033]8;;\033\\"
 
 
@@ -322,7 +325,7 @@ def report(given, pool):
         answer, _reference, body = pool[qid]
         print(f"\n[{qid}] you answered {ans}, correct is {answer}")
         print(body)
-        print(explain_link(body))
+        print(explain_link(qid, body))
 
 
 def prompt(label, default=None):
@@ -383,4 +386,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nStopped.", file=sys.stderr)
+        sys.exit(130)  # conventional for SIGINT
+    except EOFError:
+        print("\nInput ended.", file=sys.stderr)
+        sys.exit(1)

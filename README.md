@@ -86,6 +86,10 @@ least one question you cannot answer from the text alone.
 **Keep the pool PDF open beside you** and look up the figures when a question
 mentions one.
 
+If you miss one, the **Explain this question** link helps more than you would
+expect: the search carries the question ID, and study sites index the pool by
+it, so the results usually include the figure itself.
+
 ## Finishing an exam saves it
 
 Complete the exam and your answers are written to the working directory as
