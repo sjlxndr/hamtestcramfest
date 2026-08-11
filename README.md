@@ -73,6 +73,12 @@ Windows ships no `pdftotext`; poppler there is a third-party build. The winget
 package above puts it on `PATH`, which is where the script looks for it. Or skip
 it entirely and paste the pool out of your PDF viewer, as described above.
 
+Figure links additionally need tesseract, `winget install -e --id
+UB-Mannheim.TesseractOCR`. That installer does not always add itself to `PATH`,
+so the script also looks in `C:\Program Files\Tesseract-OCR`. Without it you
+still sit the exam; questions needing a figure say `Refer to PDF for Figure T-1`
+instead of linking it.
+
 ## Diagrams
 
 Some questions refer to a figure: a schematic or chart printed in the pool PDF.
@@ -92,8 +98,9 @@ Figure T-1                  <- clickable, opens in your image viewer
 That needs the pool as a PDF and **tesseract** installed:
 
 ```
-sudo apt install tesseract-ocr      # Debian, Ubuntu
-brew install tesseract              # macOS
+sudo apt install tesseract-ocr                          # Debian, Ubuntu
+brew install tesseract                                  # macOS
+winget install -e --id UB-Mannheim.TesseractOCR         # Windows
 ```
 
 Tesseract is used to read each figure's caption. The captions are drawn into the

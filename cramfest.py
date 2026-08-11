@@ -83,6 +83,14 @@ FIGURE = re.compile(r'figure\s+([TGE][0-9]?-[0-9]+)', re.I)
 # read once.
 FIGURE_INDEX = "figures.index"
 
+# Where the Windows installer puts tesseract. Unlike poppler's winget
+# package it does not reliably land on PATH, and figure links are the only
+# thing that needs it.
+TESSERACT_PATHS = (
+    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+)
+
 # Every file this touches is UTF-8, because that is what pdftotext writes.
 # Naming the codec rather than taking the locale's keeps it that way on a
 # machine whose locale says otherwise, where the pool's curly quotes and
@@ -227,6 +235,14 @@ def build_exam(pool, rng):
     return exam
 
 
+def find_tesseract():
+    """Tesseract, or None. Figure links are optional; the rest works without."""
+    for path in TESSERACT_PATHS:
+        if os.path.isfile(path):
+            return path
+    return shutil.which("tesseract")
+
+
 def read_caption(tesseract, image):
     """The figure label printed in an image, or None.
 
@@ -279,7 +295,7 @@ def load_figures(pool_path):
     if not pool_path.lower().endswith(".pdf"):
         return {}
 
-    tesseract = shutil.which("tesseract")
+    tesseract = find_tesseract()
     pdfimages = shutil.which("pdfimages") or os.path.join(
         os.path.dirname(find_pdftotext()), "pdfimages")
     if tesseract is None or not os.path.isfile(pdfimages):
@@ -306,30 +322,32 @@ def load_figures(pool_path):
     return figures
 
 
-def figure_line(body, figures):
-    """A link to the figure a question needs, or where to find it.
+def with_figures(body, figures):
+    """The question text, with its figure reference turned into a link.
 
-    The question always names the figure it wants, so the reader can be
-    told what to look up even when the image itself is unavailable.
+    The reference is linked where it stands, so the words the question
+    already uses are what the reader clicks. Where no image can be
+    offered, the reference is left as written and a line naming the figure
+    follows instead: the question always says which figure it wants, so
+    the reader can be told what to look up regardless.
     """
-    wanted = FIGURE.search(body)
-    if not wanted:
-        return None
+    reference = FIGURE.search(body)
+    if not reference:
+        return body
 
-    label = wanted.group(1).upper()
+    label = reference.group(1).upper()
     image = figures.get(label)
     if image is None:
-        return f"Refer to PDF for Figure {label}"
-    return hyperlink(pathlib.Path(image).resolve().as_uri(), f"Figure {label}")
+        return f"{body}\nRefer to PDF for Figure {label}"
+
+    linked = hyperlink(pathlib.Path(image).resolve().as_uri(), reference.group(0))
+    return body[:reference.start()] + linked + body[reference.end():]
 
 
 def ask(qid, position, total, reference, body, figures):
     print(f"\nQuestion {position}/{total}  [{qid}]"
           + (f"  (Ref: {reference})" if reference else ""))
-    print(body)
-    needed = figure_line(body, figures)
-    if needed:
-        print(needed)
+    print(with_figures(body, figures))
     while True:
         answer = input("Your answer (A/B/C/D, or 'q' to abandon): ")
         answer = answer.strip().upper()
@@ -411,7 +429,7 @@ def explain_link(qid, body):
     return hyperlink(SEARCH_URL + query, "Explain this question")
 
 
-def report(given, pool):
+def report(given, pool, figures):
     unknown = [qid for qid, _ in given if qid not in pool]
     if unknown:
         sys.exit(f"Not in this pool: {', '.join(unknown)}. Wrong pool file?")
@@ -440,7 +458,7 @@ def report(given, pool):
     for qid, ans in missed:
         answer, _reference, body = pool[qid]
         print(f"\n[{qid}] you answered {ans}, correct is {answer}")
-        print(body)
+        print(with_figures(body, figures))
         print(explain_link(qid, body))
 
 
@@ -492,14 +510,14 @@ def main():
         recorded, given = read_answers(args.score)
         print(f"Answers recorded against: {recorded or 'unrecorded'}")
         print(f"Scoring against:          {pool_name(args.pool)}")
-        report(given, load_pool(args.pool))
+        report(given, load_pool(args.pool), load_figures(args.pool))
         return
 
     pool = load_pool(args.pool)
-    given = take_exam(pool, args.pool, answers_path(pool), random.Random(),
-                      load_figures(args.pool))
+    figures = load_figures(args.pool)
+    given = take_exam(pool, args.pool, answers_path(pool), random.Random(), figures)
     if given is not None:
-        report(given, pool)
+        report(given, pool, figures)
 
 
 if __name__ == "__main__":
@@ -510,4 +528,16 @@ if __name__ == "__main__":
         sys.exit(130)  # conventional for SIGINT
     except EOFError:
         print("\nInput ended.", file=sys.stderr)
+        sys.exit(1)
+    except OSError as problem:
+        # A missing or unreadable pool, or nowhere to write the answers.
+        where = f": {problem.filename}" if problem.filename else ""
+        print(f"{problem.strerror}{where}", file=sys.stderr)
+        sys.exit(1)
+    except subprocess.CalledProcessError as problem:
+        print(f"{os.path.basename(problem.cmd[0])} failed "
+              f"({problem.returncode}) on {problem.cmd[-1]}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as problem:  # noqa: BLE001 - a CLI owes no traceback
+        print(f"{type(problem).__name__}: {problem}", file=sys.stderr)
         sys.exit(1)

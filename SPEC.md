@@ -123,8 +123,10 @@ published Extra pool contains `...on VHF and UHF D.A DX spotting system...`,
 with no space after the period, and copied text welds the other way, as in
 `...of the aircraftB. The amateur station...`.
 
-**Figures.** A question that refers to a figure carries a link to that figure's
-image, beside the question text. The link is an OSC 8 hyperlink to a `file://`
+**Figures.** Where a question names the figure it needs, those words are a link
+to the figure's image: the reader clicks the phrase the question already uses,
+rather than a line appended beneath it. This applies both when the question is
+asked and where it is listed again among the missed questions at the end. The link is an OSC 8 hyperlink to a `file://`
 URL, the same mechanism as the search link on a missed question, so it opens in
 whatever the reader's system uses for images and nothing steals focus mid-exam.
 
@@ -152,8 +154,8 @@ retry earns its place because the two modes fail on different images: `--psm 11`
 alone would lose E6-3.
 
 **A figure that cannot be linked is named instead, never guessed.** Where the
-question refers to a figure the script cannot offer, it prints `Refer to PDF for
-Figure T-1` in the link's place. The question always states which figure it
+question refers to a figure the script cannot offer, the reference is left as
+written and a line reading `Refer to PDF for Figure T-1` follows the question. The question always states which figure it
 wants, so the reader can be told exactly what to look up even when the image
 itself is unavailable.
 
@@ -183,6 +185,11 @@ must be supplied by the reader, that `pdftotext` is required for PDF input, and
 that questions depending on a figure are linked to it when the pool is a PDF and
 tesseract is installed, and that the reader should otherwise keep the pool PDF
 open to consult figures directly.
+
+**Failure.** No user mistake produces a traceback. A pool that does not exist,
+cannot be read, or is a directory; an answers file that is not there; a
+conversion that fails: each prints one line naming the problem and exits
+non-zero.
 
 **Command line.** `--pool` and `--score` as file arguments. A bare run prompts
 for the pool, which is the only thing it cannot derive. No data on stdin or
@@ -227,8 +234,10 @@ stdout.
 15. Every figure in all three pools is extracted and identified by its caption:
     Technician `T-1` to `T-3`, General `G7-1`, Extra `E5-1` through `E9-3`,
     fourteen in total, none unread.
-16. Every question referring to a figure carries a link to that figure's file:
-    12 questions in Technician, 5 in General, 27 in Extra.
+16. Every question referring to a figure links that figure's file from the
+    words naming it: 12 questions in Technician, 5 in General, 27 in Extra.
+16a. A missed question referring to a figure carries the same link where the
+    report lists it.
 17. Soft masks are never offered as figures. Extra yields twenty extracted
     files and exactly ten figures.
 18. A figure that cannot be linked prints `Refer to PDF for Figure <name>`
@@ -236,6 +245,9 @@ stdout.
 19. Links and fallback lines may mix within one exam, decided per figure.
 20. A text pool, and a machine without tesseract, produce the fallback line for
     every affected question and no error.
+21. A pool path that does not exist, is unreadable, or is a directory prints
+    one line and exits 1. So does a missing answers file. No traceback reaches
+    the reader.
 
 ## Out of scope
 
