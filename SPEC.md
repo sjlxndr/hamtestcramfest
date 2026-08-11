@@ -31,12 +31,15 @@ Resolved here so no revision round argues about them again.
    sit on read-only or shared storage. Resolved: the dump is written beside the
    pool when that directory is writable, and to a temporary file otherwise. The
    run never fails because the cache could not be written.
-5. **"Self-contained script" vs. 12 questions that require a diagram.** Group
-   T6C is 10/12 diagram-dependent and every exam draws from T6C, so 86% of
-   exams contain a question the script cannot render. Resolved in documentation
-   rather than in code: the README tells the reader to keep the pool PDF open
-   for figures T-1, T-2 and T-3. The script has no notion of figures, does not
-   detect the references, and treats those questions like any other.
+5. **"Self-contained script" vs. questions that require a diagram.** Group T6C
+   is 10/12 diagram-dependent and every exam draws from T6C, so 86% of
+   Technician exams contain one; Extra has 27 such questions against
+   Technician's 12. Resolved by linking the figure rather than drawing it: the
+   script extracts the images from the pool PDF, identifies each by reading its
+   caption, and offers a link beside the question. Where that is impossible, a
+   text pool or a machine without tesseract, the question is asked without a
+   figure and the reader falls back to the pool PDF, which the README says to
+   keep open.
 
 ## In scope
 
@@ -120,6 +123,48 @@ published Extra pool contains `...on VHF and UHF D.A DX spotting system...`,
 with no space after the period, and copied text welds the other way, as in
 `...of the aircraftB. The amateur station...`.
 
+**Figures.** Where a question names the figure it needs, those words are a link
+to the figure's image: the reader clicks the phrase the question already uses,
+rather than a line appended beneath it. This applies both when the question is
+asked and where it is listed again among the missed questions at the end. The link is an OSC 8 hyperlink to a `file://`
+URL, the same mechanism as the search link on a missed question, so it opens in
+whatever the reader's system uses for images and nothing steals focus mid-exam.
+
+Figures are extracted once per pool and cached beside it, falling back to a
+temporary directory when that location is not writable, as the text dump does.
+Extraction is `pdfimages`, which ships in poppler-utils alongside `pdftotext`,
+so PDF input gains no new prerequisite. `pdfimages -list` is read first to
+learn which extracted files are images and which are soft masks: the Extra pool
+ships a mask for every figure, so its twenty files hold ten figures, and taking
+them positionally would hand the reader a mask.
+
+**Figures are identified by reading their captions, never by position.** Each
+image carries its own caption as pixels; the figure pages hold no extractable
+text at all. Tesseract reads the caption, and the label it finds is what maps
+the file to the question. Position is not a fallback: Extra numbers its figures
+E5-1, E6-1 through E6-3, E7-1 through E7-3, then jumps to E9-1, so nothing about
+the sequence is derivable, and a wrong figure shown confidently is worse than no
+figure at all.
+
+An image that the default segmentation mode cannot read is retried once with
+`--psm 11`, per image rather than as a second pass over all of them. Thirteen of
+the fourteen figures across the three pools read first time; only E9-3's small
+Smith chart needs the retry, and Technician and General never reach it. The
+retry earns its place because the two modes fail on different images: `--psm 11`
+alone would lose E6-3.
+
+**A figure that cannot be linked is named instead, never guessed.** Where the
+question refers to a figure the script cannot offer, the reference is left as
+written and a line reading `Refer to PDF for Figure T-1` follows the question. The question always states which figure it
+wants, so the reader can be told exactly what to look up even when the image
+itself is unavailable.
+
+This is decided per figure, not per run. A pool whose captions mostly read gives
+links for those and the fallback line for the rest, within the same exam. The
+whole-run cases fall out of the same rule: a text pool has no images, and a
+machine without tesseract cannot identify what it extracted, so every affected
+question gets the fallback line.
+
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
 pass/fail against `ceil(0.74 x exam length)`, a per-subelement breakdown, and
@@ -129,16 +174,22 @@ Every missed question carries a link to a web search for an explanation of it.
 The query is the question ID followed by the question sentence, with the answer
 choices dropped, since the choices are noise a search engine matches badly. The
 ID leads because study sites index the pool by it, which finds material on that
-exact question rather than the topic at large, and is what makes the link useful
-on a diagram question the script cannot render. The link is an OSC 8
+exact question rather than the topic at large, and is what keeps the link useful
+on a diagram question when no figure link is available. The link is an OSC 8
 terminal hyperlink, so the line reads as its label rather than as a URL;
 terminals that do not understand OSC 8 print the label alone and lose nothing
 but the link. Correct answers get no link.
 
 **Documentation.** A `README.md` states what the script does, that the pool file
 must be supplied by the reader, that `pdftotext` is required for PDF input, and
-that 12 Technician questions depend on figures T-1, T-2 and T-3, which the
-reader should have the pool PDF open to consult.
+that questions depending on a figure are linked to it when the pool is a PDF and
+tesseract is installed, and that the reader should otherwise keep the pool PDF
+open to consult figures directly.
+
+**Failure.** No user mistake produces a traceback. A pool that does not exist,
+cannot be read, or is a directory; an answers file that is not there; a
+conversion that fails: each prints one line naming the problem and exits
+non-zero.
 
 **Command line.** `--pool` and `--score` as file arguments. A bare run prompts
 for the pool, which is the only thing it cannot derive. No data on stdin or
@@ -158,7 +209,8 @@ stdout.
 6. Abandoning an exam with `q` writes no answers file and reports no score.
 7. With `pdftotext` unavailable and a PDF pool, the script exits naming
    `poppler-utils`; with a `.txt` pool it runs normally.
-8. `README.md` names the figure limitation and the `pdftotext` prerequisite.
+8. `README.md` names the `pdftotext` prerequisite, the tesseract prerequisite
+   for figure links, and what happens without either.
 9. A completed exam writes `technician_answers_*.txt`, `general_answers_*.txt`
    or `extra_answers_*.txt` according to the pool it was drawn from.
 10. That file opens with `# pool: <the pool's own filename>`, and `--score`
@@ -179,12 +231,30 @@ stdout.
     correctly answered question by none.
 14. The search query is the question sentence with no answer choices in it, for
     every question in all three pools.
+15. Every figure in all three pools is extracted and identified by its caption:
+    Technician `T-1` to `T-3`, General `G7-1`, Extra `E5-1` through `E9-3`,
+    fourteen in total, none unread.
+16. Every question referring to a figure links that figure's file from the
+    words naming it: 12 questions in Technician, 5 in General, 27 in Extra.
+16a. A missed question referring to a figure carries the same link where the
+    report lists it.
+17. Soft masks are never offered as figures. Extra yields twenty extracted
+    files and exactly ten figures.
+18. A figure that cannot be linked prints `Refer to PDF for Figure <name>`
+    instead, naming the figure the question asked for.
+19. Links and fallback lines may mix within one exam, decided per figure.
+20. A text pool, and a machine without tesseract, produce the fallback line for
+    every affected question and no error.
+21. A pool path that does not exist, is unreadable, or is a directory prints
+    one line and exits 1. So does a missing answers file. No traceback reaches
+    the reader.
 
 ## Out of scope
 
-- Anything to do with diagrams in the script: rendering them, extracting them,
-  detecting the references, or flagging affected questions. Documentation
-  covers it.
+- Drawing a figure in the terminal. Sixel, the kitty protocol and iTerm2's are
+  each terminal-specific, detection is unreliable, and Windows terminals
+  largely support none of them. The figure is offered as a link and opened by
+  whatever the reader already uses for images.
 - Any GUI, web interface, or TUI beyond line-by-line prompts.
 - Resuming an interrupted exam. Quitting discards the attempt, and the answers
   file is deliberately not a checkpoint.
@@ -202,6 +272,9 @@ stdout.
 
 ## Assumptions
 
+- Figure captions are rendered into the images and are legible to OCR. True of
+  all fourteen figures in the three pools in hand: thirteen on the first
+  attempt, one on the retry, about two seconds per pool, once, cached after.
 - Character handling never raises. Correctness of the displayed text is
   secondary to the exam running: 312 bytes of the Technician pool are curly
   quotes and en-dashes, none of which the parser needs, so degrading them costs

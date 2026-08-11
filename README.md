@@ -73,22 +73,52 @@ Windows ships no `pdftotext`; poppler there is a third-party build. The winget
 package above puts it on `PATH`, which is where the script looks for it. Or skip
 it entirely and paste the pool out of your PDF viewer, as described above.
 
-## Diagrams are not shown
+Figure links additionally need tesseract, `winget install -e --id
+UB-Mannheim.TesseractOCR`. That installer does not always add itself to `PATH`,
+so the script also looks in `C:\Program Files\Tesseract-OCR`. Without it you
+still sit the exam; questions needing a figure say `Refer to PDF for Figure T-1`
+instead of linking it.
 
-Twelve questions in the Technician pool refer to figures **T-1**, **T-2** and
-**T-3**, which are drawings in the pool PDF. The script prints the question text
-only; it has no way to draw them, and does not flag which questions need them.
+## Diagrams
 
-This is not a rare corner. Group T6C is ten-twelfths diagram questions and every
-exam draws one question from T6C, so about 86% of Technician exams contain at
-least one question you cannot answer from the text alone.
+Some questions refer to a figure: a schematic or chart printed in the pool PDF.
+Technician has 3 such figures across 12 questions, General 1 across 5, and Extra
+10 across 27.
 
-**Keep the pool PDF open beside you** and look up the figures when a question
-mentions one.
+When it can, the script links the figure beside the question:
 
-If you miss one, the **Explain this question** link helps more than you would
-expect: the search carries the question ID, and study sites index the pool by
-it, so the results usually include the figure itself.
+```
+Question 14/35  [T6C02]
+What is component 1 in figure T-1?
+A. Resistor
+...
+Figure T-1                  <- clickable, opens in your image viewer
+```
+
+That needs the pool as a PDF and **tesseract** installed:
+
+```
+sudo apt install tesseract-ocr                          # Debian, Ubuntu
+brew install tesseract                                  # macOS
+winget install -e --id UB-Mannheim.TesseractOCR         # Windows
+```
+
+Tesseract is used to read each figure's caption. The captions are drawn into the
+images rather than stored as text, and the figures cannot be identified by their
+order: the Extra pool ships a hidden mask alongside every figure, and its
+numbering jumps from E7-3 straight to E9-1. Reading the caption is the only way
+to know which image is which, and showing you the wrong schematic would be worse
+than showing none.
+
+Without tesseract, or when the pool is a text file rather than a PDF, the
+question says so instead:
+
+```
+Refer to PDF for Figure T-1
+```
+
+so **keep the pool PDF to hand** either way. Figures are extracted once and
+cached beside the pool.
 
 ## Finishing an exam saves it
 
