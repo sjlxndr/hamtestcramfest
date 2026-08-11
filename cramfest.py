@@ -63,6 +63,13 @@ def find_pdftotext():
     )
 
 
+def dump_path(pool_path):
+    """Where a PDF pool's text dump is cached, or None for a text pool."""
+    if not pool_path.lower().endswith(".pdf"):
+        return None
+    return pool_path[: -len(".pdf")] + ".txt"
+
+
 def pool_text(path):
     """Return the pool text, converting a PDF with pdftotext if needed.
 
@@ -74,7 +81,7 @@ def pool_text(path):
             return f.read()
 
     pdftotext = find_pdftotext()
-    beside = path[: -len(".pdf")] + ".txt"
+    beside = dump_path(path)
 
     if os.access(os.path.dirname(os.path.abspath(beside)), os.W_OK):
         if (not os.path.exists(beside)
@@ -131,28 +138,48 @@ def ask(qid, position, total, reference, body):
           + (f"  (Ref: {reference})" if reference else ""))
     print(body)
     while True:
-        answer = input("Your answer (A/B/C/D, or 'q' to stop and save): ")
+        answer = input("Your answer (A/B/C/D, or 'q' to abandon): ")
         answer = answer.strip().upper()
         if answer in VALID or answer == "Q":
             return answer
         print(f"Enter one of {', '.join(VALID)}, or 'q'.")
 
 
+def check_answers_path(answers_path, pool_path):
+    """Refuse to write answers over the pool or its cached text dump."""
+    protected = {os.path.realpath(pool_path)}
+    dump = dump_path(pool_path)
+    if dump:
+        protected.add(os.path.realpath(dump))
+
+    if os.path.realpath(answers_path) in protected:
+        sys.exit(
+            f"Refusing to write answers to {answers_path}: that is the pool "
+            "file or the text dump made from it, and writing there would "
+            "destroy it. Choose another path."
+        )
+
+
 def take_exam(pool, answers_path, rng):
     exam = build_exam(pool, rng)
     print(f"{len(exam)} questions, one from each group. "
           f"{pass_mark(len(exam))} correct to pass.")
-    print(f"Answers are saved to {answers_path} as you go.")
+    print(f"Answers are saved to {answers_path} when you finish.")
+
+    given = []
+    for position, qid in enumerate(exam, 1):
+        _answer, reference, body = pool[qid]
+        answer = ask(qid, position, len(exam), reference, body)
+        if answer == "Q":
+            print(f"\nAbandoned after {position - 1} of {len(exam)}. "
+                  "Nothing saved.")
+            return None
+        given.append((qid, answer))
 
     with open(answers_path, "w") as out:
-        for position, qid in enumerate(exam, 1):
-            _answer, reference, body = pool[qid]
-            given = ask(qid, position, len(exam), reference, body)
-            if given == "Q":
-                print(f"\nStopped after {position - 1} of {len(exam)}.")
-                break
-            out.write(f"{qid} {given}\n")
-            out.flush()
+        for qid, answer in given:
+            out.write(f"{qid} {answer}\n")
+    return given
 
 
 def read_answers(path):
@@ -165,23 +192,18 @@ def read_answers(path):
     return given
 
 
-def report(given, pool, total):
+def report(given, pool):
     unknown = [qid for qid, _ in given if qid not in pool]
     if unknown:
         sys.exit(f"Not in this pool: {', '.join(unknown)}. Wrong pool file?")
 
     missed = [(qid, ans) for qid, ans in given if pool[qid][0] != ans]
-    correct = len(given) - len(missed)
+    total = len(given)
+    correct = total - len(missed)
     needed = pass_mark(total)
 
-    print(f"\nScore: {correct}/{total}", end="")
-    if total:
-        print(f" = {100 * correct / total:.1f}%", end="")
-    print(f"   {'PASS' if correct >= needed else 'FAIL'}"
-          f" (need {needed}/{total})")
-
-    if len(given) < total:
-        print(f"{total - len(given)} question(s) unanswered, counted wrong.")
+    print(f"\nScore: {correct}/{total} = {100 * correct / total:.1f}%"
+          f"   {'PASS' if correct >= needed else 'FAIL'} (need {needed}/{total})")
 
     print("\nBy subelement:")
     seen = collections.Counter(qid[:2] for qid, _ in given)
@@ -234,16 +256,16 @@ def parse_args():
 
 def main():
     args = parse_args()
-    pool = load_pool(args.pool)
 
     if args.score:
-        given = read_answers(args.score)
-        report(given, pool, len(given))
+        report(read_answers(args.score), load_pool(args.pool))
         return
 
-    take_exam(pool, args.answers, random.Random())
-    given = read_answers(args.answers)
-    report(given, pool, len(groups_of(pool)))
+    check_answers_path(args.answers, args.pool)
+    pool = load_pool(args.pool)
+    given = take_exam(pool, args.answers, random.Random())
+    if given is not None:
+        report(given, pool)
 
 
 if __name__ == "__main__":

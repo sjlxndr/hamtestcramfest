@@ -60,9 +60,13 @@ whatever General and Extra carry. Questions are presented in random order.
 Answer choices keep their pool letters and are not reordered.
 
 **Answer recording.** Each answer is written to the answers file as it is given,
-one `<question ID> <letter>` line per question, so an interrupted session keeps
-what was already answered. The format is the existing `answers_<timestamp>.txt`
-format, unchanged.
+one `<question ID> <letter>` line per question, in the existing
+`answers_<timestamp>.txt` format. The file is written in a single pass once the
+exam is complete; answers are held in memory during the exam and scored from
+there, never re-read from disk. Answering `q` abandons the attempt: nothing is
+written and nothing is scored. The script refuses to record answers to the pool
+file or to the text dump cached from it, both of which it would otherwise
+truncate.
 
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
@@ -88,11 +92,12 @@ prompts for them, offering defaults. No data on stdin or stdout.
 4. A `.txt` dump and its source PDF produce identical parses.
 5. Scoring a known answers file reproduces the score by hand-check, and the
    pass threshold is 26 for a 35-question exam.
-6. An interrupted exam leaves a valid answers file holding exactly the
-   questions answered so far.
+6. Abandoning an exam with `q` writes no answers file and reports no score.
 7. With `pdftotext` unavailable and a PDF pool, the script exits naming
    `poppler-utils`; with a `.txt` pool it runs normally.
 8. `README.md` names the figure limitation and the `pdftotext` prerequisite.
+9. Pointing `--answers` at the pool file, or at the `.txt` dump of a PDF pool,
+   exits without writing, and the pool is left byte-for-byte intact.
 
 ## Out of scope
 
@@ -100,6 +105,8 @@ prompts for them, offering defaults. No data on stdin or stdout.
   detecting the references, or flagging affected questions. Documentation
   covers it.
 - Any GUI, web interface, or TUI beyond line-by-line prompts.
+- Resuming an interrupted exam. Quitting discards the attempt, and the answers
+  file is deliberately not a checkpoint.
 - Progress tracking across sessions, spaced repetition, or weighting toward
   previously missed questions.
 - Shuffling or renaming answer choices.
@@ -115,8 +122,9 @@ prompts for them, offering defaults. No data on stdin or stdout.
 ## Assumptions
 
 - The script is named `cramfest.py`, after the repository.
-- Exam length equals the pool's group count. Verified for Technician (35/35);
-  unverified for General and Extra, which are not in this repository.
+- Exam length equals the pool's group count. Verified against all three pools:
+  Technician 409 questions / 35 groups, General 423 / 35, Extra 598 / 50,
+  giving the published exam lengths of 35, 35 and 50.
 - The pass threshold is `ceil(0.74 x exam length)`, giving 26 of 35 and 37 of
   50, matching the published FCC thresholds.
 - Questions are presented in random rather than group order.

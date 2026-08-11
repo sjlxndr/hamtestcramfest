@@ -58,11 +58,12 @@ least one question you cannot answer from the text alone.
 **Keep the pool PDF open beside you** and look up the figures when a question
 mentions one.
 
-## Answers are saved as you go
+## Finishing an exam saves it
 
-Every answer is written to the answers file the moment you give it, so stopping
-partway costs you nothing already answered. Press `q` at any question to stop
-and save.
+Complete the exam and your answers are written to the answers file, ready to be
+scored again later. Press `q` at any question to abandon the attempt: nothing is
+saved and nothing is scored, so treat it as walking away rather than pausing.
+There is no resume.
 
 ```
 python3 cramfest.py --pool pool.pdf --answers monday.txt
