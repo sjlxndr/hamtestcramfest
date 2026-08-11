@@ -35,20 +35,29 @@ Passing is 74%, rounded up: 26 of 35, or 37 of 50.
 PDF input shells out to `pdftotext`, from **poppler-utils**:
 
 ```
-sudo apt install poppler-utils      # Debian, Ubuntu
-brew install poppler                # macOS
+sudo apt install poppler-utils              # Debian, Ubuntu
+brew install poppler                        # macOS
+winget install -e --id Schard.Poppler       # Windows
 ```
 
-Without it, the script tells you so and exits. If you would rather not install
-anything, convert the pool once on a machine that has it and pass the `.txt`:
+Windows has no `pdftotext` of its own; poppler there is a third-party build.
+The winget package puts it on `PATH`, which is where the script looks.
+
+Without it, the script tells you so and exits.
+
+You can skip installing anything. Open the pool PDF, select all of it, paste it
+into a text file, and pass that:
 
 ```
-pdftotext pool.pdf pool.txt
-python3 cramfest.py --pool pool.txt
+python3 cramfest.py --pool pasted.txt
 ```
 
-Use `pdftotext` with no flags. The `-layout` option rearranges the text and the
-parser will not match it.
+That works because the parser reads by position rather than by line, so it does
+not care which tool rendered the text. A copy-paste out of a PDF viewer yields
+the same questions and the same answers as the PDF itself.
+
+Use `pdftotext` with no flags. `-layout` also parses, but it disagrees with the
+default on one question's wording, so there is no reason to prefer it.
 
 When given a PDF, the script writes the text dump alongside it and reuses it on
 later runs, falling back to a temporary file if that directory is not writable.

@@ -91,9 +91,11 @@ def find_pdftotext():
         return found
     sys.exit(
         "Cannot read a PDF pool: pdftotext is not installed.\n"
-        "Install poppler-utils (Debian/Ubuntu: sudo apt install poppler-utils; "
-        "macOS: brew install poppler), or pass a text dump of the pool with "
-        "--pool pool.txt instead."
+        "  Debian/Ubuntu: sudo apt install poppler-utils\n"
+        "  macOS:         brew install poppler\n"
+        "  Windows:       winget install -e --id Schard.Poppler\n"
+        "Or skip it: paste the pool out of a PDF viewer into a text file and "
+        "pass that with --pool instead."
     )
 
 
