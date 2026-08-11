@@ -66,7 +66,7 @@ PDFTOTEXT_PATHS = (
 PASS_PERCENT = 74
 VALID = ("A", "B", "C", "D")
 
-# Question ID prefixes, matching QUESTION's character class.
+# Question ID prefixes, matching _ID's character class.
 ELEMENTS = {"T": "technician", "G": "general", "E": "extra"}
 
 # Opens an answers file, naming the pool the answers were given against.
@@ -109,8 +109,9 @@ def dump_path(pool_path):
 def pool_text(path):
     """Return the pool text, converting a PDF with pdftotext if needed.
 
-    pdftotext's default (non-layout) output is what QUESTION is written
-    against; adding -layout will break block matching.
+    Default flags. -layout also parses, since nothing here depends on
+    where lines fall, but it disagrees with the default on one question's
+    wording, so there is no reason to prefer it.
     """
     if not path.lower().endswith(".pdf"):
         with open(path) as f:
