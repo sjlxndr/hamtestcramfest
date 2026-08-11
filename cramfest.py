@@ -37,15 +37,22 @@ import collections
 
 _ID = r'[TGE][0-9][A-Z][0-9]{2}'
 
-# Opens a question: the ID, the correct answer, an optional rule reference.
-HEADER = re.compile(rf'^({_ID})[ \t]+\([A-D]\)', re.M)
+# The line a question opens with: its ID and the correct answer. HEADER and
+# QUESTION share it verbatim so they cannot drift apart; if HEADER matched a
+# line QUESTION could not, load_pool would reject every pool. _OPENS_BARE is
+# the same shape without capture groups, for use inside a lookahead, where
+# groups would still be numbered and shift QUESTION's own.
+_OPENS = rf'^({_ID})[ \t]+\(([A-D])\)'
+_OPENS_BARE = rf'^{_ID}[ \t]+\([A-D]\)'
+
+HEADER = re.compile(_OPENS, re.M)
 
 # The body may not run past the start of another question. Without that
 # bound, a header carrying no body of its own runs to the next ~~ marker
 # and swallows every question in between.
 QUESTION = re.compile(
-    rf'^({_ID})[ \t]+\(([A-D])\)(?:[ \t]*\[([^\]]+)\])?[ \t]*\n'
-    rf'((?:(?!^{_ID}[ \t]+\([A-D]\)).)*?)\n[ \t]*~~',
+    _OPENS + rf'(?:[ \t]*\[([^\]]+)\])?[ \t]*\n'
+    rf'((?:(?!{_OPENS_BARE}).)*?)\n[ \t]*~~',
     re.S | re.M,
 )
 
