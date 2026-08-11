@@ -98,10 +98,15 @@ extracted. Reading then passes three gates:
    follow it in order before the next candidate. Each marker is the first
    occurrence after the previous one, and no whitespace is required around it.
 
-A question runs from its own header to the next candidate header. The choice
-gate is what rejects a header with nothing question-shaped after it, which is
-how withdrawn-question placeholders and stray errata headers are excluded
-without naming them.
+A question runs from its own header to the next candidate header, and its
+content ends at the first `~~` inside that stretch, or at the next header when
+there is none. The terminator is not a delimiter and nothing counts terminators,
+but without the trim the last choice absorbs it along with any page furniture
+sitting between two questions.
+
+The choice gate is what rejects a header with nothing question-shaped after it,
+which is how withdrawn-question placeholders and stray errata headers are
+excluded without naming them.
 
 No whitespace may be required around a choice marker, in either direction. The
 published Extra pool contains `...on VHF and UHF D.A DX spotting system...`,
@@ -151,8 +156,9 @@ stdout.
     still scores.
 11. The three `pdftotext` pools parse to Technician 409, General 423, Extra 599,
     with the same IDs, answers and references as the parser they replace.
-11a. Technician and General parse to output identical to before the change;
-    Extra gains exactly `E1A01` and loses nothing.
+11a. No pool gains or loses a question against the parser being replaced, and
+    no answer letter or rule reference changes. Bodies may differ only in
+    where their newlines fall, never in their words.
 12. A copy-paste of the Extra pool taken from a PDF viewer parses to the same
     599 questions and the same answers as its PDF.
 12a. A pool whose body does not open with a usable `[TGE]1A01` is refused.
@@ -203,6 +209,10 @@ stdout.
 - The pass threshold is `ceil(0.74 x exam length)`, giving 26 of 35 and 37 of
   50, matching the published FCC thresholds.
 - Questions are presented in random rather than group order.
+- Bodies from a viewer copy-paste can differ from the PDF's in wording as well
+  as wrapping: ten of Extra's 599 do. Question IDs, answers and rule references
+  are identical, so scoring is unaffected; only the display text of those ten
+  varies.
 - Nothing verifies that the parser read every question the pool contains. A pool
   whose headers are damaged past recognition parses short and says nothing. This
   is accepted deliberately: the tool is for complete pools, and terminator
