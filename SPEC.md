@@ -147,8 +147,9 @@ stdout.
     Extra gains exactly `E1A01` and loses nothing.
 11b. No parsed body exceeds roughly 750 characters, the current maximum once
     bodies are bounded. A runaway body is the symptom this guards.
-12. The evince copy-paste of the Extra pool is refused, naming at least
-    `E1A01` and `E1A05` among the unparsed headers, and no exam is offered.
+12. The evince copy-paste of the Extra pool is refused: 542 parsed against 564
+    header lines, naming at least `E1A05` and `E1D06` among the 22 unparsed,
+    and no exam is offered.
 13. The refusal names the offending question IDs, not just a count.
 
 ## Out of scope
