@@ -2,9 +2,12 @@
 
 Practice an FCC amateur radio license exam from the official question pool.
 
-One script, standard library only. Point it at a question pool and it builds an
+One script, nothing to pip install. Point it at a question pool and it builds an
 exam the way a Volunteer Examiner Coordinator does: one question drawn at random
 from each subelement group in the pool.
+
+Reading a PDF needs `pdftotext` on your system, covered below. A text dump of
+the pool needs nothing at all.
 
 ```
 python3 cramfest.py --pool "2026-2030 Technician Pool ... .pdf"
