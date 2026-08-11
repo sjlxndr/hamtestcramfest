@@ -2,9 +2,12 @@
 
 Practice an FCC amateur radio license exam from the official question pool.
 
-One script, standard library only. Point it at a question pool and it builds an
+One script, nothing to pip install. Point it at a question pool and it builds an
 exam the way a Volunteer Examiner Coordinator does: one question drawn at random
 from each subelement group in the pool.
+
+Reading a PDF needs `pdftotext` on your system, covered below. A text dump of
+the pool needs nothing at all.
 
 ```
 python3 cramfest.py --pool "2026-2030 Technician Pool ... .pdf"
@@ -32,23 +35,43 @@ Passing is 74%, rounded up: 26 of 35, or 37 of 50.
 PDF input shells out to `pdftotext`, from **poppler-utils**:
 
 ```
-sudo apt install poppler-utils      # Debian, Ubuntu
-brew install poppler                # macOS
+sudo apt install poppler-utils              # Debian, Ubuntu
+brew install poppler                        # macOS
+winget install -e --id Schard.Poppler       # Windows
 ```
 
-Without it, the script tells you so and exits. If you would rather not install
-anything, convert the pool once on a machine that has it and pass the `.txt`:
+Without it, the script tells you so and exits.
+
+You can skip installing anything. Open the pool PDF, select all of it, paste it
+into a text file, and pass that:
 
 ```
-pdftotext pool.pdf pool.txt
-python3 cramfest.py --pool pool.txt
+python3 cramfest.py --pool pasted.txt
 ```
 
-Use `pdftotext` with no flags. The `-layout` option rearranges the text and the
-parser will not match it.
+That works because the parser reads by position rather than by line, so it does
+not care which tool rendered the text. A copy-paste out of a PDF viewer yields
+the same questions and the same answers as the PDF itself.
+
+Use `pdftotext` with no flags. `-layout` also parses, but it disagrees with the
+default on one question's wording, so there is no reason to prefer it.
 
 When given a PDF, the script writes the text dump alongside it and reuses it on
 later runs, falling back to a temporary file if that directory is not writable.
+
+## On Windows
+
+**Use Windows Terminal, not the old console host.**
+
+Each missed question ends with a clickable link to a web search for it. That is
+a terminal hyperlink, and Windows Terminal renders it as one. The legacy console
+that `cmd.exe` opens on older systems does not, and shows the escape characters
+as junk around the label instead. Nothing else depends on it, so the exam still
+runs either way, but the report is unpleasant to read.
+
+Windows ships no `pdftotext`; poppler there is a third-party build. The winget
+package above puts it on `PATH`, which is where the script looks for it. Or skip
+it entirely and paste the pool out of your PDF viewer, as described above.
 
 ## Diagrams are not shown
 
@@ -62,6 +85,10 @@ least one question you cannot answer from the text alone.
 
 **Keep the pool PDF open beside you** and look up the figures when a question
 mentions one.
+
+If you miss one, the **Explain this question** link helps more than you would
+expect: the search carries the question ID, and study sites index the pool by
+it, so the results usually include the figure itself.
 
 ## Finishing an exam saves it
 

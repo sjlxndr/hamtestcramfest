@@ -78,6 +78,13 @@ renamed or moved, and the same release read as PDF or as a text dump records two
 different names. Reading tolerates a file with no header and ignores any `#`
 line.
 
+**Text handling.** Every file is read and written as UTF-8, named as a codec
+rather than inherited from the locale, because that is what `pdftotext` writes
+and a machine whose locale says otherwise would fail on a sound pool. Bytes that
+do not decode become replacement characters, and stdout and stderr are set to
+replace what they cannot encode. A mangled question still lets the reader sit
+the exam; a traceback does not.
+
 **Extraction-independent.** Any faithful text rendering of the pool is accepted:
 `pdftotext` output, or text copied out of a PDF viewer. Both yield the same
 questions and the same answers, because the parser depends on no property that
@@ -119,8 +126,11 @@ pass/fail against `ceil(0.74 x exam length)`, a per-subelement breakdown, and
 each missed question with the correct answer.
 
 Every missed question carries a link to a web search for an explanation of it.
-The query is the question sentence alone, with its answer choices dropped, since
-the choices are noise a search engine matches badly. The link is an OSC 8
+The query is the question ID followed by the question sentence, with the answer
+choices dropped, since the choices are noise a search engine matches badly. The
+ID leads because study sites index the pool by it, which finds material on that
+exact question rather than the topic at large, and is what makes the link useful
+on a diagram question the script cannot render. The link is an OSC 8
 terminal hyperlink, so the line reads as its label rather than as a URL;
 terminals that do not understand OSC 8 print the label alone and lose nothing
 but the link. Correct answers get no link.
@@ -192,6 +202,10 @@ stdout.
 
 ## Assumptions
 
+- Character handling never raises. Correctness of the displayed text is
+  secondary to the exam running: 312 bytes of the Technician pool are curly
+  quotes and en-dashes, none of which the parser needs, so degrading them costs
+  nothing structural.
 - **The pool body opens with `[TGE]1A01`.** This is the anchor that discards
   front matter, and it is the load-bearing assumption of the whole parser. True
   of the Technician, General and Extra pools in hand. It would break if question

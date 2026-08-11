@@ -74,6 +74,13 @@ POOL_HEADER = "# pool:"
 
 SEARCH_URL = "https://www.google.com/search?q="
 
+# Every file this touches is UTF-8, because that is what pdftotext writes.
+# Naming the codec rather than taking the locale's keeps it that way on a
+# machine whose locale says otherwise, where the pool's curly quotes and
+# en-dashes would otherwise raise. Bad bytes become replacement characters:
+# a mangled question still lets you sit the exam, a traceback does not.
+TEXT = {"encoding": "utf-8", "errors": "replace"}
+
 
 def find_pdftotext():
     for path in PDFTOTEXT_PATHS:
@@ -84,9 +91,11 @@ def find_pdftotext():
         return found
     sys.exit(
         "Cannot read a PDF pool: pdftotext is not installed.\n"
-        "Install poppler-utils (Debian/Ubuntu: sudo apt install poppler-utils; "
-        "macOS: brew install poppler), or pass a text dump of the pool with "
-        "--pool pool.txt instead."
+        "  Debian/Ubuntu: sudo apt install poppler-utils\n"
+        "  macOS:         brew install poppler\n"
+        "  Windows:       winget install -e --id Schard.Poppler\n"
+        "Or skip it: paste the pool out of a PDF viewer into a text file and "
+        "pass that with --pool instead."
     )
 
 
@@ -114,7 +123,7 @@ def pool_text(path):
     wording, so there is no reason to prefer it.
     """
     if not path.lower().endswith(".pdf"):
-        with open(path) as f:
+        with open(path, **TEXT) as f:
             return f.read()
 
     pdftotext = find_pdftotext()
@@ -124,14 +133,14 @@ def pool_text(path):
         if (not os.path.exists(beside)
                 or os.path.getmtime(beside) < os.path.getmtime(path)):
             subprocess.run([pdftotext, path, beside], check=True)
-        with open(beside) as f:
+        with open(beside, **TEXT) as f:
             return f.read()
 
     handle, scratch = tempfile.mkstemp(suffix=".txt")
     os.close(handle)
     try:
         subprocess.run([pdftotext, path, scratch], check=True)
-        with open(scratch) as f:
+        with open(scratch, **TEXT) as f:
             return f.read()
     finally:
         os.unlink(scratch)
@@ -237,7 +246,7 @@ def take_exam(pool, pool_path, out_path, rng):
             return None
         given.append((qid, answer))
 
-    with open(out_path, "w") as out:
+    with open(out_path, "w", **TEXT) as out:
         out.write(f"{POOL_HEADER} {pool_name(pool_path)}\n")
         for qid, answer in given:
             out.write(f"{qid} {answer}\n")
@@ -248,7 +257,7 @@ def read_answers(path):
     """Return the pool named in the header, or None, and the answers."""
     recorded = None
     given = []
-    with open(path) as f:
+    with open(path, **TEXT) as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -273,13 +282,16 @@ def asked(body):
     return " ".join(question[:cut]).strip()
 
 
-def explain_link(body):
+def explain_link(qid, body):
     """An OSC 8 hyperlink to a search for the question.
 
-    Terminals that do not understand OSC 8 print the label alone, so the
-    line stays readable either way.
+    The question ID leads the query: study sites index the pool by it, so
+    it finds material about this exact question rather than the topic in
+    general. Terminals that do not understand OSC 8 print the label alone,
+    so the line stays readable either way.
     """
-    query = urllib.parse.quote_plus(f"Explain this ham radio question: {asked(body)}")
+    query = urllib.parse.quote_plus(
+        f"Explain this ham radio question: {qid} {asked(body)}")
     return f"\033]8;;{SEARCH_URL}{query}\033\\Explain this question\033]8;;\033\\"
 
 
@@ -313,7 +325,7 @@ def report(given, pool):
         answer, _reference, body = pool[qid]
         print(f"\n[{qid}] you answered {ans}, correct is {answer}")
         print(body)
-        print(explain_link(body))
+        print(explain_link(qid, body))
 
 
 def prompt(label, default=None):
@@ -352,6 +364,12 @@ def parse_args():
 
 
 def main():
+    # A terminal whose encoding cannot represent the pool's curly quotes
+    # would otherwise raise mid-question. Printing them as "?" is worse to
+    # read and better than stopping the exam.
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(errors="replace")
+
     args = parse_args()
 
     if args.score:
@@ -368,4 +386,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nStopped.", file=sys.stderr)
+        sys.exit(130)  # conventional for SIGINT
+    except EOFError:
+        print("\nInput ended.", file=sys.stderr)
+        sys.exit(1)
