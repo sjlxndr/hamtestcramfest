@@ -1,0 +1,10 @@
+# Only the Python tooling is tracked. Everything else in this directory is
+# derived from the source question pool, a third-party document, or a personal
+# study record. Adding a new tracked file means adding it here first.
+*
+!/.gitignore
+!/*.py
+
+# Worktrees are excluded explicitly, not left to the catch-all above, so the
+# entry survives any future move away from a deny-all list.
+.claude/worktrees/
