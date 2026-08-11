@@ -60,20 +60,23 @@ mentions one.
 
 ## Finishing an exam saves it
 
-Complete the exam and your answers are written to the answers file, ready to be
-scored again later. Press `q` at any question to abandon the attempt: nothing is
-saved and nothing is scored, so treat it as walking away rather than pausing.
-There is no resume.
+Complete the exam and your answers are written to the working directory as
+`technician_answers_2026-08-11_130945.txt`, named for the element you sat and
+when. Press `q` at any question to abandon the attempt: nothing is saved and
+nothing is scored, so treat it as walking away rather than pausing. There is no
+resume.
+
+Score a saved file later without retaking the exam:
 
 ```
-python3 cramfest.py --pool pool.pdf --answers monday.txt
+python3 cramfest.py --pool pool.pdf --score technician_answers_2026-08-11_130945.txt
 ```
 
-Score a saved answers file later without retaking the exam:
-
-```
-python3 cramfest.py --pool pool.pdf --score monday.txt
-```
+Scoring needs the pool the exam came from, because the file records question IDs
+and nothing else. The element in the filename tells you which pool that is, but
+**it cannot tell two releases of the same element apart** — question IDs are
+reused between releases and the correct answer can change underneath one. Score
+against the pool you sat, not merely the current one.
 
 The report gives your score, pass or fail, a per-subelement breakdown, and every
 missed question with the correct answer.

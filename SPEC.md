@@ -59,14 +59,17 @@ group. Exam length is therefore the pool's group count: 35 for Technician,
 whatever General and Extra carry. Questions are presented in random order.
 Answer choices keep their pool letters and are not reordered.
 
-**Answer recording.** Each answer is written to the answers file as it is given,
-one `<question ID> <letter>` line per question, in the existing
-`answers_<timestamp>.txt` format. The file is written in a single pass once the
-exam is complete; answers are held in memory during the exam and scored from
-there, never re-read from disk. Answering `q` abandons the attempt: nothing is
-written and nothing is scored. The script refuses to record answers to the pool
-file or to the text dump cached from it, both of which it would otherwise
-truncate.
+**Answer recording.** Answers are held in memory for the duration of the exam
+and scored from there, never re-read from disk. A completed exam is written in a
+single pass to `<element>_answers_<timestamp>.txt` in the working directory, one
+`<question ID> <letter>` line per question. Answering `q` abandons the attempt:
+nothing is written and nothing is scored.
+
+The path is not configurable. An auto-named file cannot collide with the pool or
+its text dump, so there is no overwrite to guard against, and the element in the
+name is the only pool identity carried anywhere: it tells the reader which pool
+to hand back to `--score`. It does not distinguish two releases of the same
+element, which can differ in the correct answer under a shared question ID.
 
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
@@ -78,8 +81,9 @@ must be supplied by the reader, that `pdftotext` is required for PDF input, and
 that 12 Technician questions depend on figures T-1, T-2 and T-3, which the
 reader should have the pool PDF open to consult.
 
-**Command line.** `--pool`, `--answers`, `--score` as file arguments; a bare run
-prompts for them, offering defaults. No data on stdin or stdout.
+**Command line.** `--pool` and `--score` as file arguments. A bare run prompts
+for the pool, which is the only thing it cannot derive. No data on stdin or
+stdout.
 
 ### Acceptance criteria
 
@@ -96,8 +100,8 @@ prompts for them, offering defaults. No data on stdin or stdout.
 7. With `pdftotext` unavailable and a PDF pool, the script exits naming
    `poppler-utils`; with a `.txt` pool it runs normally.
 8. `README.md` names the figure limitation and the `pdftotext` prerequisite.
-9. Pointing `--answers` at the pool file, or at the `.txt` dump of a PDF pool,
-   exits without writing, and the pool is left byte-for-byte intact.
+9. A completed exam writes `technician_answers_*.txt`, `general_answers_*.txt`
+   or `extra_answers_*.txt` according to the pool it was drawn from.
 
 ## Out of scope
 

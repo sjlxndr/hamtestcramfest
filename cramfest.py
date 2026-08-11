@@ -4,8 +4,14 @@ Ham radio license exam practice, driven by an FCC question pool.
 
 Usage:
     python3 cramfest.py --pool pool.pdf
-    python3 cramfest.py --pool pool.pdf --score answers_2026-08-11_120000.txt
-    python3 cramfest.py                     # prompts for what it needs
+    python3 cramfest.py --pool pool.pdf --score technician_answers_....txt
+    python3 cramfest.py                     # prompts for the pool
+
+A finished exam is written to <element>_answers_<timestamp>.txt in the
+working directory, and --score reads one back. Scoring needs the pool the
+exam came from; the filename names the element so you know which one, but
+two releases of the same element are indistinguishable and can hold a
+different correct answer under the same question ID.
 
 Give it a question pool released by the NCVEC, as the released PDF or a
 text dump of one, and it builds an exam the way a VEC does: one question
@@ -45,6 +51,9 @@ PDFTOTEXT_PATHS = (
 
 PASS_PERCENT = 74
 VALID = ("A", "B", "C", "D")
+
+# Question ID prefixes, matching QUESTION's character class.
+ELEMENTS = {"T": "technician", "G": "general", "E": "extra"}
 
 
 def find_pdftotext():
@@ -144,21 +153,6 @@ def ask(qid, position, total, reference, body):
         print(f"Enter one of {', '.join(VALID)}, or 'q'.")
 
 
-def check_answers_path(answers_path, pool_path):
-    """Refuse to write answers over the pool or its cached text dump."""
-    protected = {os.path.realpath(pool_path)}
-    dump = dump_path(pool_path)
-    if dump:
-        protected.add(os.path.realpath(dump))
-
-    if os.path.realpath(answers_path) in protected:
-        sys.exit(
-            f"Refusing to write answers to {answers_path}: that is the pool "
-            "file or the text dump made from it, and writing there would "
-            "destroy it. Choose another path."
-        )
-
-
 def take_exam(pool, answers_path, rng):
     exam = build_exam(pool, rng)
     print(f"{len(exam)} questions, one from each group. "
@@ -233,9 +227,16 @@ def prompt(label, default=None):
             return default
 
 
-def default_answers_path():
+def answers_path(pool):
+    """Name the answers file after the exam it came from.
+
+    The element is the only pool identity carried anywhere, so it goes in
+    the filename: it tells you which pool to hand back to --score. It does
+    not distinguish two releases of the same element.
+    """
+    element = ELEMENTS[next(iter(pool))[0]]
     stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    return os.path.join(os.getcwd(), f"answers_{stamp}.txt")
+    return os.path.join(os.getcwd(), f"{element}_answers_{stamp}.txt")
 
 
 def parse_args():
@@ -243,14 +244,11 @@ def parse_args():
         description="Practice an FCC amateur radio exam from a question pool.",
     )
     parser.add_argument("--pool", help="question pool, PDF or text dump")
-    parser.add_argument("--answers", help="file to record answers in")
     parser.add_argument("--score", help="score this answers file, no exam")
     args = parser.parse_args()
 
     if args.pool is None:
         args.pool = prompt("Question pool file")
-    if args.answers is None and args.score is None:
-        args.answers = prompt("Answers file", default_answers_path())
     return args
 
 
@@ -261,9 +259,8 @@ def main():
         report(read_answers(args.score), load_pool(args.pool))
         return
 
-    check_answers_path(args.answers, args.pool)
     pool = load_pool(args.pool)
-    given = take_exam(pool, args.answers, random.Random())
+    given = take_exam(pool, answers_path(pool), random.Random())
     if given is not None:
         report(given, pool)
 
