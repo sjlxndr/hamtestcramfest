@@ -21,7 +21,6 @@ Reading a PDF needs pdftotext, from poppler-utils. A text dump avoids it.
 import os
 import re
 import sys
-import math
 import random
 import shutil
 import argparse
@@ -208,7 +207,8 @@ def report(given, pool):
     print("\nBy subelement:")
     seen = collections.Counter(qid[:2] for qid, _ in given)
     wrong = collections.Counter(qid[:2] for qid, _ in missed)
-    for subelement in sorted(seen, key=lambda s: (s[1] != "0", s)):
+    # Subelement 0 is last in the pool, not first, despite sorting that way.
+    for subelement in sorted(seen, key=lambda s: (s[1] == "0", s)):
         asked = seen[subelement]
         print(f"  {subelement}: {asked - wrong[subelement]}/{asked}")
 
