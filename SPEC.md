@@ -186,8 +186,9 @@ stdout.
 
 - The script is named `cramfest.py`, after the repository.
 - Exam length equals the pool's group count. Verified against all three pools:
-  Technician 409 questions / 35 groups, General 423 / 35, Extra 598 / 50,
-  giving the published exam lengths of 35, 35 and 50.
+  Technician 409 questions / 35 groups, General 423 / 35, Extra 599 / 50,
+  giving the published exam lengths of 35, 35 and 50. The Extra figure is 599
+  once bodies are bounded; it reads 598 before, missing `E1A01`.
 - The pass threshold is `ceil(0.74 x exam length)`, giving 26 of 35 and 37 of
   50, matching the published FCC thresholds.
 - Questions are presented in random rather than group order.
