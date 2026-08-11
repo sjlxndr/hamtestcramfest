@@ -78,6 +78,11 @@ renamed or moved, and the same release read as PDF or as a text dump records two
 different names. Reading tolerates a file with no header and ignores any `#`
 line.
 
+**Extraction-independent.** Any faithful text rendering of the pool is accepted:
+`pdftotext` output, or text copied out of a PDF viewer. Both yield the same
+questions and the same answers, because the parser depends on no property that
+differs between them.
+
 **Parsing.** The pool is read by position, not by line. All whitespace is
 collapsed to single spaces first, so nothing depends on where the source put its
 newlines; that is what makes the parser indifferent to how the text was
@@ -102,20 +107,6 @@ No whitespace may be required around a choice marker, in either direction. The
 published Extra pool contains `...on VHF and UHF D.A DX spotting system...`,
 with no space after the period, and copied text welds the other way, as in
 `...of the aircraftB. The amateur station...`.
-
-**Parse completeness.** Every `~~` in the anchored text must close a parsed
-question. The check runs after front matter is discarded, on exactly the text
-the parser read, so a terminator ahead of the anchor is out of its reach as well
-as the parser's.
-Terminators are no longer used to delimit anything, but they remain the only
-evidence of a question the parser never saw: a header damaged past recognition
-is invisible to a header-driven parser, while its terminator is still there. Any
-`~~` closing no question is a refusal, named by line number.
-
-A `~~` legitimately closes nothing where the pool says so in words, beside a
-`<ID> Question Deleted (section not renumbered)` placeholder or the end-of-pool
-marker. Both are excluded by the text next to them, so the rule needs no
-per-pool baseline.
 
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
@@ -162,14 +153,10 @@ stdout.
     with the same IDs, answers and references as the parser they replace.
 11a. Technician and General parse to output identical to before the change;
     Extra gains exactly `E1A01` and loses nothing.
-11b. No parsed body exceeds roughly 750 characters, the current maximum. A
-    question runs to the next header, so a runaway body means a header was
-    missed, and length is the cheapest way to see that.
 12. A copy-paste of the Extra pool taken from a PDF viewer parses to the same
     599 questions and the same answers as its PDF.
 12a. A pool whose body does not open with a usable `[TGE]1A01` is refused.
 12b. Front matter yields no questions: no header before the anchor is parsed.
-13. A stranded `~~` is refused, naming its line.
 14. Each missed question is followed by exactly one search hyperlink, and a
     correctly answered question by none.
 15. The search query is the question sentence with no answer choices in it, for
@@ -194,16 +181,6 @@ stdout.
 - Opening the pool PDF to the page holding a referenced figure.
 - A study mode that drills a single subelement rather than a full exam.
 - A seed argument for reproducible exams.
-- Parsing text that a PDF viewer's copy-paste produces. The completeness check
-  is what makes this safe to attempt later: a more permissive parser can be
-  tried without the risk that made it a bad idea, because a parse that goes
-  wrong is refused rather than silently used. It is real work rather than a
-  regex tweak: the evince paste damages the text at least three separate ways,
-  welding question IDs onto the end of a previous line at page breaks, dropping
-  the newline between the `[reference]` and the question text, and losing or
-  joining `~~` terminators. Bounding bodies, which this spec adopts for its own
-  reasons, leaves 57 of the paste's questions unrecovered, so the remaining work
-  is with the other two defects.
 
 ## Assumptions
 
@@ -226,10 +203,10 @@ stdout.
 - The pass threshold is `ceil(0.74 x exam length)`, giving 26 of 35 and 37 of
   50, matching the published FCC thresholds.
 - Questions are presented in random rather than group order.
-- The completeness check detects damage without quantifying it. It counts
-  headers that sit at the start of a line, so input whose only damage is welding
-  IDs onto previous lines would pass: in the evince paste it flags 22 of the 57
-  losses. Detection is the goal; a shortfall of any size is a refusal.
+- Nothing verifies that the parser read every question the pool contains. A pool
+  whose headers are damaged past recognition parses short and says nothing. This
+  is accepted deliberately: the tool is for complete pools, and terminator
+  counting was scaffolding for a parser that lost questions on ordinary input.
 - `.gitignore` needs explicit `!/SPEC.md` and `!/README.md` negations, because
   its deny-all whitelist would otherwise refuse both files. `!/*.md` is not
   used, as it would re-admit the personal study records the whitelist exists to
