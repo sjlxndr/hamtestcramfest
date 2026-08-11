@@ -35,8 +35,17 @@ import tempfile
 import subprocess
 import collections
 
+_ID = r'[TGE][0-9][A-Z][0-9]{2}'
+
+# Opens a question: the ID, the correct answer, an optional rule reference.
+HEADER = re.compile(rf'^({_ID})[ \t]+\([A-D]\)', re.M)
+
+# The body may not run past the start of another question. Without that
+# bound, a header carrying no body of its own runs to the next ~~ marker
+# and swallows every question in between.
 QUESTION = re.compile(
-    r'^([TGE][0-9][A-Z][0-9]{2})\s+\(([A-D])\)(?:\s*\[([^\]]+)\])?\n(.*?)\n~~',
+    rf'^({_ID})[ \t]+\(([A-D])\)(?:[ \t]*\[([^\]]+)\])?[ \t]*\n'
+    rf'((?:(?!^{_ID}[ \t]+\([A-D]\)).)*?)\n[ \t]*~~',
     re.S | re.M,
 )
 
@@ -128,6 +137,16 @@ def load_pool(path):
         pool[qid] = (answer, reference, re.sub(r'\n{2,}', '\n', body.strip()))
     if not pool:
         sys.exit(f"No questions found in {path}. Is it an NCVEC question pool?")
+
+    unparsed = sorted({m.group(1) for m in HEADER.finditer(text)} - set(pool))
+    if unparsed:
+        sys.exit(
+            f"{len(unparsed)} question(s) in {path} start correctly but do not "
+            f"parse: {', '.join(unparsed)}.\n"
+            "This pool text is incomplete, and an exam drawn from it would be "
+            "quietly missing questions. Extract the pool with pdftotext and no "
+            "flags; text copied out of a PDF viewer loses questions."
+        )
     return pool
 
 
