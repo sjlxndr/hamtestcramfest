@@ -78,6 +78,13 @@ renamed or moved, and the same release read as PDF or as a text dump records two
 different names. Reading tolerates a file with no header and ignores any `#`
 line.
 
+**Text handling.** Every file is read and written as UTF-8, named as a codec
+rather than inherited from the locale, because that is what `pdftotext` writes
+and a machine whose locale says otherwise would fail on a sound pool. Bytes that
+do not decode become replacement characters, and stdout and stderr are set to
+replace what they cannot encode. A mangled question still lets the reader sit
+the exam; a traceback does not.
+
 **Extraction-independent.** Any faithful text rendering of the pool is accepted:
 `pdftotext` output, or text copied out of a PDF viewer. Both yield the same
 questions and the same answers, because the parser depends on no property that
@@ -192,6 +199,10 @@ stdout.
 
 ## Assumptions
 
+- Character handling never raises. Correctness of the displayed text is
+  secondary to the exam running: 312 bytes of the Technician pool are curly
+  quotes and en-dashes, none of which the parser needs, so degrading them costs
+  nothing structural.
 - **The pool body opens with `[TGE]1A01`.** This is the anchor that discards
   front matter, and it is the load-bearing assumption of the whole parser. True
   of the Technician, General and Extra pools in hand. It would break if question
