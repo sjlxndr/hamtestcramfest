@@ -112,6 +112,13 @@ saved answers file without re-taking the exam. The report gives the score,
 pass/fail against `ceil(0.74 x exam length)`, a per-subelement breakdown, and
 each missed question with the correct answer.
 
+Every missed question carries a link to a web search for an explanation of it.
+The query is the question sentence alone, with its answer choices dropped, since
+the choices are noise a search engine matches badly. The link is an OSC 8
+terminal hyperlink, so the line reads as its label rather than as a URL;
+terminals that do not understand OSC 8 print the label alone and lose nothing
+but the link. Correct answers get no link.
+
 **Documentation.** A `README.md` states what the script does, that the pool file
 must be supplied by the reader, that `pdftotext` is required for PDF input, and
 that 12 Technician questions depend on figures T-1, T-2 and T-3, which the
@@ -151,6 +158,10 @@ stdout.
     header lines, naming at least `E1A05` and `E1D06` among the 22 unparsed,
     and no exam is offered.
 13. The refusal names the offending question IDs, not just a count.
+14. Each missed question is followed by exactly one search hyperlink, and a
+    correctly answered question by none.
+15. The search query is the question sentence with no answer choices in it, for
+    every question in all three pools.
 
 ## Out of scope
 
