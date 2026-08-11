@@ -97,7 +97,7 @@ yield a question, the script names the offending IDs and exits without running
 an exam.
 
 This exists because the parser's failure mode is silent under-reading, not
-crashing. An evince copy-paste of the Extra pool yields 542 of 598 questions
+crashing. An evince copy-paste of the Extra pool yields 542 of 599 questions
 while still covering all 50 groups, so it produces a full-length exam drawn from
 a pool missing 9% of its questions, with nothing to notice. The check converts
 that into a refusal.
@@ -174,12 +174,13 @@ stdout.
 - Parsing text that a PDF viewer's copy-paste produces. The completeness check
   is what makes this safe to attempt later: a more permissive parser can be
   tried without the risk that made it a bad idea, because a parse that goes
-  wrong is refused rather than silently used. Three separate defects were
-  measured in the evince paste, so it is real work rather than a regex tweak:
-  question IDs welded to the end of a previous line at page breaks (35 cases),
-  no newline between the `[reference]` and the question text (14), and missing
-  or joined `~~` terminators (7). Forbidding the body from crossing another
-  header was tried and traded ten recoveries for ten losses.
+  wrong is refused rather than silently used. It is real work rather than a
+  regex tweak: the evince paste damages the text at least three separate ways,
+  welding question IDs onto the end of a previous line at page breaks, dropping
+  the newline between the `[reference]` and the question text, and losing or
+  joining `~~` terminators. Bounding bodies, which this spec adopts for its own
+  reasons, leaves 57 of the paste's questions unrecovered, so the remaining work
+  is with the other two defects.
 
 ## Assumptions
 
@@ -192,7 +193,7 @@ stdout.
 - Questions are presented in random rather than group order.
 - The completeness check detects damage without quantifying it. It counts
   headers that sit at the start of a line, so input whose only damage is welding
-  IDs onto previous lines would pass: in the evince paste it flags 22 of the 56
+  IDs onto previous lines would pass: in the evince paste it flags 22 of the 57
   losses. Detection is the goal; a shortfall of any size is a refusal.
 - `.gitignore` needs explicit `!/SPEC.md` and `!/README.md` negations, because
   its deny-all whitelist would otherwise refuse both files. `!/*.md` is not
