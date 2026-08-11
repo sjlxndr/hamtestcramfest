@@ -246,14 +246,14 @@ def asked(body):
     return " ".join(question[:cut]).strip()
 
 
-def explain_link(body, label="Explain this question"):
+def explain_link(body):
     """An OSC 8 hyperlink to a search for the question.
 
     Terminals that do not understand OSC 8 print the label alone, so the
     line stays readable either way.
     """
     query = urllib.parse.quote_plus(f"Explain this ham radio question: {asked(body)}")
-    return f"\033]8;;{SEARCH_URL}{query}\033\\{label}\033]8;;\033\\"
+    return f"\033]8;;{SEARCH_URL}{query}\033\\Explain this question\033]8;;\033\\"
 
 
 def report(given, pool):
