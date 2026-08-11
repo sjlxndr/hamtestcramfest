@@ -107,6 +107,22 @@ state pre-errata counts, and the errata prose does not reconcile with them: the
 General pool declares 425, withdraws 9 by errata, and contains 423. A check
 built on those numbers would refuse a sound pool.
 
+**Orphan terminators.** Every question ends with a `~~`, so a question the
+parser failed to read leaves its terminator behind. Any `~~` that closes no
+parsed question is a refusal, named by line number.
+
+This catches what the header check structurally cannot. A question whose ID was
+welded onto the end of the previous line never looks like a header, so the
+header check reports nothing wrong while the pool runs short. Neither check
+subsumes the other: the header check catches a question whose terminator is
+missing, the orphan check catches one whose header is unreadable.
+
+Two kinds of `~~` legitimately close no question, and the pool says so in words:
+the placeholder left behind by a withdrawn question, `<ID> Question Deleted
+(section not renumbered)`, and the end-of-pool marker. Both are excluded by the
+text beside them, so the rule needs no per-pool baseline and no count to compare
+against.
+
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
 pass/fail against `ceil(0.74 x exam length)`, a per-subelement breakdown, and
@@ -162,6 +178,11 @@ stdout.
     correctly answered question by none.
 15. The search query is the question sentence with no answer choices in it, for
     every question in all three pools.
+16. All three `pdftotext` pools yield zero orphan terminators.
+17. Deleting the newline before a question's ID, so it welds onto the previous
+    line, is refused: the header check sees nothing, the orphan check names the
+    stranded terminator's line.
+18. The evince copy-paste of the Extra pool is refused.
 
 ## Out of scope
 
@@ -203,6 +224,11 @@ stdout.
 - The pass threshold is `ceil(0.74 x exam length)`, giving 26 of 35 and 37 of
   50, matching the published FCC thresholds.
 - Questions are presented in random rather than group order.
+- A `~~` is treated as structural when a `Question Deleted` placeholder or the
+  end-of-pool marker appears within a line either side of it. A lost question
+  immediately adjacent to a deletion placeholder would therefore have its
+  orphan masked. Deletions are rare and clustered, and the header check still
+  covers part of that ground.
 - The completeness check detects damage without quantifying it. It counts
   headers that sit at the start of a line, so input whose only damage is welding
   IDs onto previous lines would pass: in the evince paste it flags 22 of the 57

@@ -77,6 +77,10 @@ POOL_HEADER = "# pool:"
 
 SEARCH_URL = "https://www.google.com/search?q="
 
+# A ~~ that closes no question is legitimate only where the pool says so:
+# beside a withdrawn question's placeholder, or at the end of the pool.
+STRUCTURAL = re.compile(r'Question Deleted|end of question pool text', re.I)
+
 
 def find_pdftotext():
     for path in PDFTOTEXT_PATHS:
@@ -139,12 +143,38 @@ def pool_text(path):
         os.unlink(scratch)
 
 
+def orphan_terminators(text, spans):
+    """Line numbers of ~~ markers that close no question.
+
+    Every question ends with one, so a question the parser failed to read
+    leaves its terminator behind. This catches losses the header check
+    cannot see, because a question whose ID was welded onto the previous
+    line never looks like a header in the first place.
+    """
+    lines = text.split("\n")
+    offset = 0
+    orphans = []
+    for number, line in enumerate(lines, 1):
+        for marker in re.finditer(r'~~', line):
+            position = offset + marker.start()
+            if any(start <= position < end for start, end in spans):
+                continue
+            if STRUCTURAL.search("\n".join(lines[max(0, number - 2):number + 1])):
+                continue
+            orphans.append(number)
+        offset += len(line) + 1
+    return orphans
+
+
 def load_pool(path):
     text = pool_text(path).replace("\f", "")  # strip page-break artifacts
 
     pool = {}
-    for qid, answer, reference, body in QUESTION.findall(text):
+    spans = []
+    for match in QUESTION.finditer(text):
+        qid, answer, reference, body = match.groups()
         pool[qid] = (answer, reference, re.sub(r'\n{2,}', '\n', body.strip()))
+        spans.append((match.start(), match.end()))
     if not pool:
         sys.exit(f"No questions found in {path}. Is it an NCVEC question pool?")
 
@@ -156,6 +186,18 @@ def load_pool(path):
             "This pool text is incomplete, and an exam drawn from it would be "
             "quietly missing questions. Extract the pool with pdftotext and no "
             "flags; text copied out of a PDF viewer loses questions."
+        )
+
+    orphans = orphan_terminators(text, spans)
+    if orphans:
+        shown = sorted(set(orphans))
+        sys.exit(
+            f"{len(orphans)} question terminator(s) in {path} close no "
+            f"question, at line(s) {', '.join(str(n) for n in shown[:12])}"
+            f"{' and more' if len(shown) > 12 else ''}.\n"
+            "Each question ends with one, so these mark questions that were "
+            "lost before the parser saw them. Extract the pool with pdftotext "
+            "and no flags; text copied out of a PDF viewer loses questions."
         )
     return pool
 
