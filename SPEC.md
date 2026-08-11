@@ -78,6 +78,35 @@ renamed or moved, and the same release read as PDF or as a text dump records two
 different names. Reading tolerates a file with no header and ignores any `#`
 line.
 
+**Bounded question bodies.** A question's body may not run past the start of
+another question header. Without that bound the non-greedy body runs to the next
+`~~` it can find, and a header with no body of its own swallows every question
+between it and that marker.
+
+This is a live defect, not a hypothetical. The Extra pool's errata preamble
+carries `E1E10 (C) [97.509(m)]` as a bodyless header; its match runs 8,227
+characters and consumes `E1A01`, which is absent from the parsed Extra pool
+today. `E1E10` itself survives only because it appears a second time, properly,
+and the later parse overwrites the first. Bounding the body recovers `E1A01`,
+drops nothing, and leaves Technician and General byte-for-byte unchanged.
+
+**Parse completeness.** Every line that looks like a question header must parse
+into a complete question. A header line is `^<ID> (<letter>)`; a complete
+question is that header plus a body terminated by `~~`. If any header fails to
+yield a question, the script names the offending IDs and exits without running
+an exam.
+
+This exists because the parser's failure mode is silent under-reading, not
+crashing. An evince copy-paste of the Extra pool yields 542 of 598 questions
+while still covering all 50 groups, so it produces a full-length exam drawn from
+a pool missing 9% of its questions, with nothing to notice. The check converts
+that into a refusal.
+
+The pool's own `SUBELEMENT ... NN Questions` declarations are **not** used. They
+state pre-errata counts, and the errata prose does not reconcile with them: the
+General pool declares 425, withdraws 9 by errata, and contains 423. A check
+built on those numbers would refuse a sound pool.
+
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
 pass/fail against `ceil(0.74 x exam length)`, a per-subelement breakdown, and
@@ -112,6 +141,15 @@ stdout.
 10. That file opens with `# pool: <the pool's own filename>`, and `--score`
     prints it next to the pool being scored against. A file without the header
     still scores.
+11. The three `pdftotext` pools in hand parse with zero unparsed headers and
+    run normally: Technician 409, General 423, Extra 599.
+11a. Technician and General parse to output identical to before the change;
+    Extra gains exactly `E1A01` and loses nothing.
+11b. No parsed body exceeds roughly 750 characters, the current maximum once
+    bodies are bounded. A runaway body is the symptom this guards.
+12. The evince copy-paste of the Extra pool is refused, naming at least
+    `E1A01` and `E1A05` among the unparsed headers, and no exam is offered.
+13. The refusal names the offending question IDs, not just a count.
 
 ## Out of scope
 
@@ -132,6 +170,15 @@ stdout.
 - Opening the pool PDF to the page holding a referenced figure.
 - A study mode that drills a single subelement rather than a full exam.
 - A seed argument for reproducible exams.
+- Parsing text that a PDF viewer's copy-paste produces. The completeness check
+  is what makes this safe to attempt later: a more permissive parser can be
+  tried without the risk that made it a bad idea, because a parse that goes
+  wrong is refused rather than silently used. Three separate defects were
+  measured in the evince paste, so it is real work rather than a regex tweak:
+  question IDs welded to the end of a previous line at page breaks (35 cases),
+  no newline between the `[reference]` and the question text (14), and missing
+  or joined `~~` terminators (7). Forbidding the body from crossing another
+  header was tried and traded ten recoveries for ten losses.
 
 ## Assumptions
 
@@ -142,6 +189,10 @@ stdout.
 - The pass threshold is `ceil(0.74 x exam length)`, giving 26 of 35 and 37 of
   50, matching the published FCC thresholds.
 - Questions are presented in random rather than group order.
+- The completeness check detects damage without quantifying it. It counts
+  headers that sit at the start of a line, so input whose only damage is welding
+  IDs onto previous lines would pass: in the evince paste it flags 22 of the 56
+  losses. Detection is the goal; a shortfall of any size is a refusal.
 - `.gitignore` needs explicit `!/SPEC.md` and `!/README.md` negations, because
   its deny-all whitelist would otherwise refuse both files. `!/*.md` is not
   used, as it would re-admit the personal study records the whitelist exists to
