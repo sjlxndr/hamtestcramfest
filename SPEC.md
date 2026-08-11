@@ -78,34 +78,40 @@ renamed or moved, and the same release read as PDF or as a text dump records two
 different names. Reading tolerates a file with no header and ignores any `#`
 line.
 
-**Bounded question bodies.** A question's body may not run past the start of
-another question header. Without that bound the non-greedy body runs to the next
-`~~` it can find, and a header with no body of its own swallows every question
-between it and that marker.
+**Extraction-independent.** Any faithful text rendering of the pool is accepted:
+`pdftotext` output, or text copied out of a PDF viewer. Both yield the same
+questions and the same answers, because the parser depends on no property that
+differs between them.
 
-This is a live defect, not a hypothetical. The Extra pool's errata preamble
-carries `E1E10 (C) [97.509(m)]` as a bodyless header; its match runs 8,227
-characters and consumes `E1A01`, which is absent from the parsed Extra pool
-today. `E1E10` itself survives only because it appears a second time, properly,
-and the later parse overwrites the first. Bounding the body recovers `E1A01`,
-drops nothing, and leaves Technician and General byte-for-byte unchanged.
+**Parsing.** The pool is read by position, not by line. All whitespace is
+collapsed to single spaces first, so nothing depends on where the source put its
+newlines; that is what makes the parser indifferent to how the text was
+extracted. Reading then passes three gates:
 
-**Parse completeness.** Every line that looks like a question header must parse
-into a complete question. A header line is `^<ID> (<letter>)`; a complete
-question is that header plus a body terminated by `~~`. If any header fails to
-yield a question, the script names the offending IDs and exits without running
-an exam.
+1. **Anchor.** Everything before the first `[TGE]1A01` header that satisfies the
+   choice gate is front matter, and is discarded. Errata, syllabus and cover
+   pages never reach the parser.
+2. **Shape.** A question header is an ID-shaped token, whitespace, a
+   parenthesised answer letter, and an optional bracketed rule reference.
+   Candidates are found anywhere in the text.
+3. **Choices.** A candidate is a question only if `A.`, `B.`, `C.` and `D.`
+   follow it in order before the next candidate. Each marker is the first
+   occurrence after the previous one, and no whitespace is required around it.
 
-This exists because the parser's failure mode is silent under-reading, not
-crashing. An evince copy-paste of the Extra pool yields 542 of 599 questions
-while still covering all 50 groups, so it produces a full-length exam drawn from
-a pool missing 9% of its questions, with nothing to notice. The check converts
-that into a refusal.
+A question runs from its own header to the next candidate header, and its
+content ends at the first `~~` inside that stretch, or at the next header when
+there is none. The terminator is not a delimiter and nothing counts terminators,
+but without the trim the last choice absorbs it along with any page furniture
+sitting between two questions.
 
-The pool's own `SUBELEMENT ... NN Questions` declarations are **not** used. They
-state pre-errata counts, and the errata prose does not reconcile with them: the
-General pool declares 425, withdraws 9 by errata, and contains 423. A check
-built on those numbers would refuse a sound pool.
+The choice gate is what rejects a header with nothing question-shaped after it,
+which is how withdrawn-question placeholders and stray errata headers are
+excluded without naming them.
+
+No whitespace may be required around a choice marker, in either direction. The
+published Extra pool contains `...on VHF and UHF D.A DX spotting system...`,
+with no space after the period, and copied text welds the other way, as in
+`...of the aircraftB. The amateur station...`.
 
 **Scoring.** Scoring runs at the end of an exam, and can also run against a
 saved answers file without re-taking the exam. The report gives the score,
@@ -148,19 +154,20 @@ stdout.
 10. That file opens with `# pool: <the pool's own filename>`, and `--score`
     prints it next to the pool being scored against. A file without the header
     still scores.
-11. The three `pdftotext` pools in hand parse with zero unparsed headers and
-    run normally: Technician 409, General 423, Extra 599.
-11a. Technician and General parse to output identical to before the change;
-    Extra gains exactly `E1A01` and loses nothing.
-11b. No parsed body exceeds roughly 750 characters, the current maximum once
-    bodies are bounded. A runaway body is the symptom this guards.
-12. The evince copy-paste of the Extra pool is refused: 542 parsed against 564
-    header lines, naming at least `E1A05` and `E1D06` among the 22 unparsed,
-    and no exam is offered.
-13. The refusal names the offending question IDs, not just a count.
-14. Each missed question is followed by exactly one search hyperlink, and a
+11. The three `pdftotext` pools parse to Technician 409, General 423, Extra 599,
+    with the same IDs, answers and references as the parser they replace.
+11a. On those three pools, no question is gained or lost against the parser
+    being replaced, and no answer letter or rule reference changes. Bodies
+    differ only in where their newlines fall, never in their words.
+11b. No body ends with a `~~`, and none contains text belonging to the next
+    question. A question's content stops at its terminator.
+12. A copy-paste of the Extra pool taken from a PDF viewer parses to the same
+    599 questions and the same answers as its PDF.
+12a. A pool whose body does not open with a usable `[TGE]1A01` is refused.
+12b. Front matter yields no questions: no header before the anchor is parsed.
+13. Each missed question is followed by exactly one search hyperlink, and a
     correctly answered question by none.
-15. The search query is the question sentence with no answer choices in it, for
+14. The search query is the question sentence with no answer choices in it, for
     every question in all three pools.
 
 ## Out of scope
@@ -182,31 +189,36 @@ stdout.
 - Opening the pool PDF to the page holding a referenced figure.
 - A study mode that drills a single subelement rather than a full exam.
 - A seed argument for reproducible exams.
-- Parsing text that a PDF viewer's copy-paste produces. The completeness check
-  is what makes this safe to attempt later: a more permissive parser can be
-  tried without the risk that made it a bad idea, because a parse that goes
-  wrong is refused rather than silently used. It is real work rather than a
-  regex tweak: the evince paste damages the text at least three separate ways,
-  welding question IDs onto the end of a previous line at page breaks, dropping
-  the newline between the `[reference]` and the question text, and losing or
-  joining `~~` terminators. Bounding bodies, which this spec adopts for its own
-  reasons, leaves 57 of the paste's questions unrecovered, so the remaining work
-  is with the other two defects.
 
 ## Assumptions
+
+- **The pool body opens with `[TGE]1A01`.** This is the anchor that discards
+  front matter, and it is the load-bearing assumption of the whole parser. True
+  of the Technician, General and Extra pools in hand. It would break if question
+  01 of group 1A were ever withdrawn; withdrawals do happen, `G1A04`, `G1C09`
+  and `G8C01` among them, so this is unobserved rather than impossible. A pool
+  with no usable anchor is refused rather than parsed unanchored, because the
+  alternative is a silently wrong pool.
+- Collapsing whitespace discards the line breaks the PDF used inside a question.
+  Bodies keep their words, choices and answers, and lose the source's wrapping:
+  353 of Technician's 409 bodies are unchanged and 56 differ only in where the
+  newlines fall.
 
 - The script is named `cramfest.py`, after the repository.
 - Exam length equals the pool's group count. Verified against all three pools:
   Technician 409 questions / 35 groups, General 423 / 35, Extra 599 / 50,
-  giving the published exam lengths of 35, 35 and 50. The Extra figure is 599
-  once bodies are bounded; it reads 598 before, missing `E1A01`.
+  giving the published exam lengths of 35, 35 and 50.
 - The pass threshold is `ceil(0.74 x exam length)`, giving 26 of 35 and 37 of
   50, matching the published FCC thresholds.
 - Questions are presented in random rather than group order.
-- The completeness check detects damage without quantifying it. It counts
-  headers that sit at the start of a line, so input whose only damage is welding
-  IDs onto previous lines would pass: in the evince paste it flags 22 of the 57
-  losses. Detection is the goal; a shortfall of any size is a refusal.
+- Bodies from a viewer copy-paste can differ from the PDF's in wording as well
+  as wrapping: ten of Extra's 599 do. Question IDs, answers and rule references
+  are identical, so scoring is unaffected; only the display text of those ten
+  varies.
+- Nothing verifies that the parser read every question the pool contains. A pool
+  whose headers are damaged past recognition parses short and says nothing. This
+  is accepted deliberately: the tool is for complete pools, and terminator
+  counting was scaffolding for a parser that lost questions on ordinary input.
 - `.gitignore` needs explicit `!/SPEC.md` and `!/README.md` negations, because
   its deny-all whitelist would otherwise refuse both files. `!/*.md` is not
   used, as it would re-admit the personal study records the whitelist exists to

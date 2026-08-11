@@ -38,24 +38,21 @@ import urllib.parse
 
 _ID = r'[TGE][0-9][A-Z][0-9]{2}'
 
-# The line a question opens with: its ID and the correct answer. HEADER and
-# QUESTION share it verbatim so they cannot drift apart; if HEADER matched a
-# line QUESTION could not, load_pool would reject every pool. _OPENS_BARE is
-# the same shape without capture groups, for use inside a lookahead, where
-# groups would still be numbered and shift QUESTION's own.
-_OPENS = rf'^({_ID})[ \t]+\(([A-D])\)'
-_OPENS_BARE = rf'^{_ID}[ \t]+\([A-D]\)'
+# What a question opens with: its ID, the correct answer, an optional rule
+# reference. Deliberately unanchored. A PDF holds positioned glyphs rather
+# than lines, so pdftotext and a viewer's copy-paste each guess where the
+# lines break and guess differently; matching on position instead of line
+# structure is what makes the parser indifferent to which one produced the
+# text.
+HEADER = re.compile(rf'({_ID})\s+\(([A-D])\)\s*(?:\[([^\]]+)\])?')
 
-HEADER = re.compile(_OPENS, re.M)
+# The pool body opens with question 01 of group 1A. Everything before it is
+# errata, syllabus and cover pages.
+POOL_OPENS = "1A01"
 
-# The body may not run past the start of another question. Without that
-# bound, a header carrying no body of its own runs to the next ~~ marker
-# and swallows every question in between.
-QUESTION = re.compile(
-    _OPENS + rf'(?:[ \t]*\[([^\]]+)\])?[ \t]*\n'
-    rf'((?:(?!{_OPENS_BARE}).)*?)\n[ \t]*~~',
-    re.S | re.M,
-)
+# Closes a question's content. Not a delimiter, but without trimming here the
+# last choice swallows it along with any page furniture between questions.
+TERMINATOR = "~~"
 
 # Where poppler installs pdftotext when it is not already on PATH.
 PDFTOTEXT_PATHS = (
@@ -69,7 +66,7 @@ PDFTOTEXT_PATHS = (
 PASS_PERCENT = 74
 VALID = ("A", "B", "C", "D")
 
-# Question ID prefixes, matching QUESTION's character class.
+# Question ID prefixes, matching _ID's character class.
 ELEMENTS = {"T": "technician", "G": "general", "E": "extra"}
 
 # Opens an answers file, naming the pool the answers were given against.
@@ -112,8 +109,9 @@ def dump_path(pool_path):
 def pool_text(path):
     """Return the pool text, converting a PDF with pdftotext if needed.
 
-    pdftotext's default (non-layout) output is what QUESTION is written
-    against; adding -layout will break block matching.
+    Default flags. -layout also parses, since nothing here depends on
+    where lines fall, but it disagrees with the default on one question's
+    wording, so there is no reason to prefer it.
     """
     if not path.lower().endswith(".pdf"):
         with open(path) as f:
@@ -139,25 +137,54 @@ def pool_text(path):
         os.unlink(scratch)
 
 
+def split_choices(content):
+    """The question and its four choices, or None if all four are not there.
+
+    Each marker is the first occurrence after the previous one, and no
+    whitespace is required around it in either direction. The published
+    Extra pool contains "UHF D.A DX spotting system" with no space after
+    the period, and copied text welds the other way, as in "the aircraftB.
+    The amateur station".
+    """
+    cuts, at = [], 0
+    for letter in "ABCD":
+        found = content.find(f"{letter}.", at)
+        if found == -1:
+            return None
+        cuts.append(found)
+        at = found + 2
+
+    parts = [content[:cuts[0]]]
+    parts += [content[a:b] for a, b in zip(cuts, cuts[1:] + [len(content)])]
+    return [part.strip() for part in parts]
+
+
 def load_pool(path):
-    text = pool_text(path).replace("\f", "")  # strip page-break artifacts
+    text = " ".join(pool_text(path).split())  # position, not line structure
+    headers = list(HEADER.finditer(text))
 
-    pool = {}
-    for qid, answer, reference, body in QUESTION.findall(text):
-        pool[qid] = (answer, reference, re.sub(r'\n{2,}', '\n', body.strip()))
-    if not pool:
-        sys.exit(f"No questions found in {path}. Is it an NCVEC question pool?")
+    questions = []
+    for n, head in enumerate(headers):
+        end = headers[n + 1].start() if n + 1 < len(headers) else len(text)
+        content = text[head.end():end]
+        stop = content.find(TERMINATOR)
+        if stop != -1:
+            content = content[:stop]
 
-    unparsed = sorted({m.group(1) for m in HEADER.finditer(text)} - set(pool))
-    if unparsed:
+        parts = split_choices(content)
+        if parts:  # a header with nothing question-shaped after it is not one
+            questions.append((head.group(1), head.group(2), head.group(3), parts))
+
+    opens = next((n for n, q in enumerate(questions)
+                  if q[0][1:] == POOL_OPENS), None)
+    if opens is None:
         sys.exit(
-            f"{len(unparsed)} question(s) in {path} start correctly but do not "
-            f"parse: {', '.join(unparsed)}.\n"
-            "This pool text is incomplete, and an exam drawn from it would be "
-            "quietly missing questions. Extract the pool with pdftotext and no "
-            "flags; text copied out of a PDF viewer loses questions."
+            f"Cannot find where the pool starts in {path}: no question "
+            f"numbered {POOL_OPENS}. Is it an NCVEC question pool?"
         )
-    return pool
+
+    return {qid: (answer, reference, "\n".join(parts))
+            for qid, answer, reference, parts in questions[opens:]}
 
 
 def groups_of(pool):
