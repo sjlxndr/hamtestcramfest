@@ -1,4 +1,4 @@
-# cramfest
+# ham test cram fest
 
 Practice an FCC amateur radio license exam from the official question pool.
 
