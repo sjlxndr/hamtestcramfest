@@ -162,8 +162,8 @@ Every missed question carries a link to a web search for an explanation of it.
 The query is the question ID followed by the question sentence, with the answer
 choices dropped, since the choices are noise a search engine matches badly. The
 ID leads because study sites index the pool by it, which finds material on that
-exact question rather than the topic at large, and is what makes the link useful
-on a diagram question the script cannot render. The link is an OSC 8
+exact question rather than the topic at large, and is what keeps the link useful
+on a diagram question when no figure link is available. The link is an OSC 8
 terminal hyperlink, so the line reads as its label rather than as a URL;
 terminals that do not understand OSC 8 print the label alone and lose nothing
 but the link. Correct answers get no link.
