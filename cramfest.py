@@ -32,6 +32,7 @@ import shutil
 import argparse
 import datetime
 import tempfile
+import pathlib
 import subprocess
 import collections
 import urllib.parse
@@ -73,6 +74,14 @@ ELEMENTS = {"T": "technician", "G": "general", "E": "extra"}
 POOL_HEADER = "# pool:"
 
 SEARCH_URL = "https://www.google.com/search?q="
+
+# How a question names the figure it needs. Technician writes T-1, General
+# and Extra carry the subelement digit, as in G7-1 and E5-1.
+FIGURE = re.compile(r'figure\s+([TGE][0-9]?-[0-9]+)', re.I)
+
+# Caches the label OCR read for each extracted image, so a pool is only
+# read once.
+FIGURE_INDEX = "figures.index"
 
 # Every file this touches is UTF-8, because that is what pdftotext writes.
 # Naming the codec rather than taking the locale's keeps it that way on a
@@ -218,10 +227,109 @@ def build_exam(pool, rng):
     return exam
 
 
-def ask(qid, position, total, reference, body):
+def read_caption(tesseract, image):
+    """The figure label printed in an image, or None.
+
+    Retried once in sparse-text mode. Neither mode reads every figure: the
+    default misses the small Smith chart of E9-3, sparse mode misses E6-3.
+    Thirteen of the fourteen figures in the three pools read first time.
+    """
+    for mode in ([], ["--psm", "11"]):
+        seen = subprocess.run([tesseract, image, "-", *mode],
+                              capture_output=True, text=True, **TEXT)
+        found = FIGURE.search(seen.stdout)
+        if found:
+            return found.group(1).upper()
+    return None
+
+
+def extract_figures(pool_path, cache, pdfimages, tesseract):
+    """Pull the pool's figures out and label each by reading its caption.
+
+    Position cannot stand in for the caption. Extra ships a soft mask for
+    every figure, so its twenty extracted files hold ten figures, and its
+    numbering jumps from E7-3 to E9-1, so nothing about the order is
+    derivable.
+    """
+    listing = subprocess.run([pdfimages, "-list", pool_path],
+                             capture_output=True, text=True, **TEXT)
+    kinds = [row.split()[2] for row in listing.stdout.splitlines()[2:]]
+
+    subprocess.run([pdfimages, "-png", pool_path, os.path.join(cache, "fig")],
+                   check=True, capture_output=True)
+    written = sorted(f for f in os.listdir(cache) if f.endswith(".png"))
+
+    figures = {}
+    for kind, name in zip(kinds, written):
+        if kind != "image":
+            continue
+        label = read_caption(tesseract, os.path.join(cache, name))
+        if label:
+            figures[label] = name
+    return figures
+
+
+def load_figures(pool_path):
+    """Figure label to image path, empty when figures cannot be had.
+
+    A text pool holds no images, and without tesseract an extracted image
+    cannot be told from any other, so both yield nothing and every
+    affected question falls back to naming the figure.
+    """
+    if not pool_path.lower().endswith(".pdf"):
+        return {}
+
+    tesseract = shutil.which("tesseract")
+    pdfimages = shutil.which("pdfimages") or os.path.join(
+        os.path.dirname(find_pdftotext()), "pdfimages")
+    if tesseract is None or not os.path.isfile(pdfimages):
+        return {}
+
+    cache = pool_path[: -len(".pdf")] + ".figures"
+    if not os.access(os.path.dirname(os.path.abspath(cache)), os.W_OK):
+        cache = tempfile.mkdtemp(suffix=".figures")
+    os.makedirs(cache, exist_ok=True)
+
+    index = os.path.join(cache, FIGURE_INDEX)
+    if not os.path.exists(index):
+        found = extract_figures(pool_path, cache, pdfimages, tesseract)
+        with open(index, "w", **TEXT) as f:
+            for label, name in sorted(found.items()):
+                f.write(f"{label} {name}\n")
+
+    figures = {}
+    with open(index, **TEXT) as f:
+        for line in f:
+            if line.strip():
+                label, name = line.split()
+                figures[label] = os.path.join(cache, name)
+    return figures
+
+
+def figure_line(body, figures):
+    """A link to the figure a question needs, or where to find it.
+
+    The question always names the figure it wants, so the reader can be
+    told what to look up even when the image itself is unavailable.
+    """
+    wanted = FIGURE.search(body)
+    if not wanted:
+        return None
+
+    label = wanted.group(1).upper()
+    image = figures.get(label)
+    if image is None:
+        return f"Refer to PDF for Figure {label}"
+    return hyperlink(pathlib.Path(image).resolve().as_uri(), f"Figure {label}")
+
+
+def ask(qid, position, total, reference, body, figures):
     print(f"\nQuestion {position}/{total}  [{qid}]"
           + (f"  (Ref: {reference})" if reference else ""))
     print(body)
+    needed = figure_line(body, figures)
+    if needed:
+        print(needed)
     while True:
         answer = input("Your answer (A/B/C/D, or 'q' to abandon): ")
         answer = answer.strip().upper()
@@ -230,7 +338,7 @@ def ask(qid, position, total, reference, body):
         print(f"Enter one of {', '.join(VALID)}, or 'q'.")
 
 
-def take_exam(pool, pool_path, out_path, rng):
+def take_exam(pool, pool_path, out_path, rng, figures):
     exam = build_exam(pool, rng)
     print(f"{len(exam)} questions, one from each group. "
           f"{pass_mark(len(exam))} correct to pass.")
@@ -239,7 +347,7 @@ def take_exam(pool, pool_path, out_path, rng):
     given = []
     for position, qid in enumerate(exam, 1):
         _answer, reference, body = pool[qid]
-        answer = ask(qid, position, len(exam), reference, body)
+        answer = ask(qid, position, len(exam), reference, body, figures)
         if answer == "Q":
             print(f"\nAbandoned after {position - 1} of {len(exam)}. "
                   "Nothing saved.")
@@ -282,17 +390,25 @@ def asked(body):
     return " ".join(question[:cut]).strip()
 
 
+def hyperlink(url, label):
+    """An OSC 8 terminal hyperlink.
+
+    Terminals that do not understand OSC 8 print the label alone, so the
+    line stays readable either way.
+    """
+    return f"\033]8;;{url}\033\\{label}\033]8;;\033\\"
+
+
 def explain_link(qid, body):
     """An OSC 8 hyperlink to a search for the question.
 
     The question ID leads the query: study sites index the pool by it, so
     it finds material about this exact question rather than the topic in
-    general. Terminals that do not understand OSC 8 print the label alone,
-    so the line stays readable either way.
+    general.
     """
     query = urllib.parse.quote_plus(
         f"Explain this ham radio question: {qid} {asked(body)}")
-    return f"\033]8;;{SEARCH_URL}{query}\033\\Explain this question\033]8;;\033\\"
+    return hyperlink(SEARCH_URL + query, "Explain this question")
 
 
 def report(given, pool):
@@ -380,7 +496,8 @@ def main():
         return
 
     pool = load_pool(args.pool)
-    given = take_exam(pool, args.pool, answers_path(pool), random.Random())
+    given = take_exam(pool, args.pool, answers_path(pool), random.Random(),
+                      load_figures(args.pool))
     if given is not None:
         report(given, pool)
 
