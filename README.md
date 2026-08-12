@@ -10,6 +10,18 @@ from each subelement group in the pool.
 python3 cramfest.py --pool <pool>
 ```
 
+## Contents
+
+- [Synopsis](#synopsis)
+- [You supply the question pool](#you-supply-the-question-pool)
+- [Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext)
+- [Sitting an exam](#sitting-an-exam)
+- [Diagrams](#diagrams)
+- [Scoring a saved file](#scoring-a-saved-file)
+- [Where you need to study](#where-you-need-to-study)
+- [Drilling one area](#drilling-one-area)
+- [On Windows](#on-windows)
+
 ## Synopsis
 
 ```
