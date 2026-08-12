@@ -16,11 +16,11 @@ python3 cramfest.py --pool <pool>
 - [You supply the question pool](#you-supply-the-question-pool)
 - [Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext)
 - [Sitting an exam](#sitting-an-exam)
-- [Diagrams](#diagrams)
 - [Scoring a saved file](#scoring-a-saved-file)
 - [Where you need to study](#where-you-need-to-study)
 - [Drilling one area](#drilling-one-area)
 - [Learning as you go](#learning-as-you-go)
+- [Diagrams](#diagrams)
 - [On Windows](#on-windows)
 
 ## Synopsis
@@ -105,51 +105,12 @@ Finish, and your answers are written to the working directory as
 when. The report gives your score, pass or fail, a per-subelement breakdown, and
 every question you missed with the correct answer.
 
+Some questions refer to a diagram, and most exams contain at least one — see
+[Diagrams](#diagrams) for how those work.
+
 Each missed question ends with an **Explain this question** link, which searches
 the web for that question by its ID. Study sites index the pool that way, so the
 results are usually about the exact question rather than the topic at large.
-
-## Diagrams
-
-Some questions refer to a figure: a schematic or chart printed in the pool PDF.
-Technician has 3 such figures across 12 questions, General 1 across 5, and Extra
-10 across 27.
-
-Where it can, the script turns the reference itself into a link:
-
-```
-Question 14/35  [T6C02]
-What is component 1 in figure T-1?      <- "figure T-1" is clickable
-A. Resistor
-B. Transistor
-C. Battery
-D. Connector
-```
-
-Clicking it opens the figure in whatever you use for images. That needs the pool
-as a PDF and **tesseract** installed:
-
-```
-sudo apt install tesseract-ocr                          # Debian, Ubuntu
-brew install tesseract                                  # macOS
-winget install -e --id UB-Mannheim.TesseractOCR         # Windows
-```
-
-Tesseract reads each figure's caption. The captions are drawn into the images
-rather than stored as text, and the figures cannot be told apart by their order:
-the Extra pool ships a hidden mask alongside every figure, and its numbering
-jumps from E7-3 straight to E9-1. Reading the caption is the only way to know
-which image is which, and showing you the wrong schematic would be worse than
-showing none.
-
-Without tesseract, or from a text pool, the question says this instead:
-
-```
-Refer to PDF for Figure T-1
-```
-
-so keep the pool PDF to hand either way. Figures are extracted once and cached
-beside the pool, or in a temporary directory if that is not writable.
 
 ## Scoring a saved file
 
@@ -300,6 +261,48 @@ drill, which discard an unfinished attempt. Those are meant to be finished; this
 one is not. The file is `technician_feedback_<timestamp>.txt`, so it stays out of
 your exam and drill globs, and you can feed it to `--weak` if you want it
 counted.
+
+## Diagrams
+
+Some questions refer to a figure: a schematic or chart printed in the pool PDF.
+Technician has 3 such figures across 12 questions, General 1 across 5, and Extra
+10 across 27.
+
+Where it can, the script turns the reference itself into a link:
+
+```
+Question 14/35  [T6C02]
+What is component 1 in figure T-1?      <- "figure T-1" is clickable
+A. Resistor
+B. Transistor
+C. Battery
+D. Connector
+```
+
+Clicking it opens the figure in whatever you use for images. That needs the pool
+as a PDF and **tesseract** installed:
+
+```
+sudo apt install tesseract-ocr                          # Debian, Ubuntu
+brew install tesseract                                  # macOS
+winget install -e --id UB-Mannheim.TesseractOCR         # Windows
+```
+
+Tesseract reads each figure's caption. The captions are drawn into the images
+rather than stored as text, and the figures cannot be told apart by their order:
+the Extra pool ships a hidden mask alongside every figure, and its numbering
+jumps from E7-3 straight to E9-1. Reading the caption is the only way to know
+which image is which, and showing you the wrong schematic would be worse than
+showing none.
+
+Without tesseract, or from a text pool, the question says this instead:
+
+```
+Refer to PDF for Figure T-1
+```
+
+so keep the pool PDF to hand either way. Figures are extracted once and cached
+beside the pool, or in a temporary directory if that is not writable.
 
 ## On Windows
 
