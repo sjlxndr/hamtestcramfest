@@ -171,6 +171,39 @@ your browser searches for an explanation of that question. It is a terminal
 hyperlink, so it needs a terminal that supports them — most modern ones do, and
 those that do not simply show the words without the link.
 
+## Drilling one area
+
+`--weak` tells you what to study; `--drill` studies it. Pass a subelement or a
+group and it asks every question in it, in random order:
+
+```
+python3 cramfest.py --pool pool.pdf --drill T8C     # one group, 11 questions
+python3 cramfest.py --pool pool.pdf --drill T8      # one subelement, 47
+```
+
+Groups run 8-15 questions, subelements 23-99, so `--count` caps a long one:
+
+```
+python3 cramfest.py --pool pool.pdf --drill E7 --count 20
+```
+
+A count of nought, or one larger than the area holds, asks the whole area rather
+than complaining. Which questions you get is random too, so repeated drills of
+the same area are not the same drill.
+
+There is no pass mark on a drill: 74% is a threshold for a 35-question exam and
+means nothing across twelve questions from one group. You get the score and the
+questions you missed.
+
+Answers go to `technician_drill_T8C_<timestamp>.txt`, deliberately not the exam
+filename. You drill what you are weak at, so counting drills as exam attempts
+would keep those areas looking bad. Glob whichever set you want when reporting:
+
+```
+python3 cramfest.py --pool pool.pdf --weak technician_answers_*.txt   # exams
+python3 cramfest.py --pool pool.pdf --weak technician_drill_*.txt     # drills
+```
+
 ## Where you need to study
 
 Point `--weak` at any number of saved answers files and it ranks what you keep

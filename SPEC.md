@@ -186,6 +186,25 @@ that questions depending on a figure are linked to it when the pool is a PDF and
 tesseract is installed, and that the reader should otherwise keep the pool PDF
 open to consult figures directly.
 
+**Drill.** `--drill T8` asks every question in a subelement; `--drill T8C` asks
+every question in a group. The argument's length says which is meant, so no
+second flag is needed, and it is matched without regard to case.
+
+Order is random in every case, including when the whole area is asked, so a
+repeated drill does not rehearse the same sequence. `--count` constrains how many
+are asked, and which ones is random too. A count below one, or one at least as
+large as the area holds, is not an error: the whole area is asked, since both
+mean the same thing as asking for all of it.
+
+A drill is not an exam and is not scored as one. The report gives the score and
+the questions missed, with no pass mark: 74% is a threshold for a 35-question
+exam and says nothing about twelve questions from one group.
+
+Answers are written to `<element>_drill_<area>_<timestamp>.txt` rather than the
+exam name. Drills concentrate on weak areas by design, so folding them into the
+exam record would make those areas look permanently worse; keeping the names
+apart lets the reader choose which to include when reporting weak areas.
+
 **Weak areas.** Given a set of answers files, the script reports where study is
 needed as three tables: subelements ranked worst first, then the groups missed
 laid out under that same ranking, then the same groups ranked worst first on
@@ -217,8 +236,9 @@ cannot be read, or is a directory; an answers file that is not there; a
 conversion that fails: each prints one line naming the problem and exits
 non-zero.
 
-**Command line.** `--pool` and `--score` as file arguments, and `--weak` taking
-one or more answers files. A bare run prompts for the pool, which is the only
+**Command line.** `--pool` and `--score` as file arguments, `--weak` taking one
+or more answers files, and `--drill` taking a subelement or group with an
+optional `--count`. A bare run prompts for the pool, which is the only
 thing it cannot derive. No data on stdin or stdout.
 
 ### Acceptance criteria
@@ -278,7 +298,16 @@ thing it cannot derive. No data on stdin or stdout.
     groups ordered by their subelement's rank, and groups ranked worst first,
     each with the fraction beside the percentage. The group tables omit groups
     answered correctly.
-23. Questions in an answers file that are absent from the pool are reported
+23. `--drill T8C` asks every question in that group and `--drill T8` every
+    question in that subelement. Order varies between runs whether or not
+    `--count` is given, and a constrained drill picks its questions at random.
+24. `--count` below one, or at least the size of the area, asks the whole area
+    rather than failing.
+25. A drill reports a score and the questions missed, and no pass mark.
+26. A drill writes `<element>_drill_<area>_<timestamp>.txt`, so a glob for the
+    exam files does not pick it up.
+27. An area no question belongs to is refused, naming what was asked for.
+28. Questions in an answers file that are absent from the pool are reported
     rather than counted, so scoring against the wrong release is visible.
 
 ## Out of scope
@@ -299,7 +328,6 @@ thing it cannot derive. No data on stdin or stdout.
 
 ## Deferred
 
-- A study mode that drills a single subelement rather than a full exam.
 - A seed argument for reproducible exams.
 
 ## Assumptions
