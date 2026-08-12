@@ -246,17 +246,37 @@ python3 cramfest.py --pool pool.pdf --weak technician_drill_*.txt     # drills
 
 ## On Windows
 
-**Use Windows Terminal, not the old console host.**
+You need two programs installed alongside Python. Both come from **winget**, the
+package installer that ships with Windows 11 and reaches Windows 10 through the
+App Installer — the same idea as the Microsoft Store, but typed rather than
+clicked.
 
-Both the figure links and the **Explain this question** links are terminal
-hyperlinks. Windows Terminal renders them; the legacy console that `cmd.exe`
-opens on older systems does not, and shows the escape characters as junk around
-the label instead. Everything still runs, but it is unpleasant to read.
+Open **Windows Terminal** (press Start, type `terminal`, press Enter) and paste
+these in, one at a time:
 
-Windows ships no `pdftotext`; poppler there is a third-party build. The
-`Schard.Poppler` winget package puts it on `PATH`, which is where the script
-looks. Or skip it and paste the pool out of your PDF viewer.
+```
+winget install -e --id Schard.Poppler
+winget install -e --id UB-Mannheim.TesseractOCR
+```
 
-Figure links additionally need `UB-Mannheim.TesseractOCR`. That installer does
-not always add itself to `PATH`, so the script also looks in
+Close the terminal and open a new one afterwards, so it picks up the newly
+installed programs.
+
+| What it gives you | Without it |
+|---|---|
+| **Poppler** reads the question pool out of the PDF | you must paste the pool into a text file yourself |
+| **Tesseract** identifies the diagrams | questions say `Refer to PDF for Figure T-1` instead of linking it |
+
+Neither is required to sit an exam. If `winget` is not recognised, your Windows
+is too old for it; download poppler and tesseract from their own websites
+instead, or skip poppler entirely and paste the pool into a text file, as under
+*Reading a PDF needs pdftotext*.
+
+**Use Windows Terminal, not the old black `cmd.exe` window.** The figure links
+and the **Explain this question** links are clickable only in a terminal that
+supports them. Windows Terminal does; the older console shows them as stray
+punctuation around the words instead. Everything still works either way, but the
+report is unpleasant to read.
+
+If tesseract was installed somewhere other than `PATH`, the script also looks in
 `C:\Program Files\Tesseract-OCR`.
