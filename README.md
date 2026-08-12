@@ -15,13 +15,14 @@ python3 cramfest.py --pool <pool>
 - [Synopsis](#synopsis)
 - [You supply the question pool](#you-supply-the-question-pool)
 - [Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext)
-- [Sitting an exam](#sitting-an-exam)
+- [Taking an exam](#taking-an-exam)
 - [Scoring a saved file](#scoring-a-saved-file)
 - [Where you need to study](#where-you-need-to-study)
 - [Drilling one area](#drilling-one-area)
 - [Learning as you go](#learning-as-you-go)
 - [Diagrams](#diagrams)
 - [On Windows](#on-windows)
+- [License](#license)
 
 ## Synopsis
 
@@ -37,15 +38,15 @@ cramfest.py
 | Option | Meaning |
 |---|---|
 | `--pool <pool>` | the question pool: the released PDF, or a text dump of one |
-| `--score <answers>` | score a saved answers file again instead of sitting an exam |
+| `--score <answers>` | score a saved answers file again instead of taking an exam |
 | `--weak <answers>...` | rank what you keep getting wrong, across any number of files |
 | `--drill <area>` | ask every question in a subelement (`T8`) or group (`T8C`) |
 | `--count <n>` | with `--drill` or `--feedback`, ask at most that many |
 | `--feedback` | work through the pool, told the answer after each question |
 | `-h`, `--help` | the same list, from the script |
 
-Every mode needs the pool. Nothing else is required to sit an exam, so the bare
-form asks for the pool and then sits one.
+Every mode needs the pool. Nothing else is required to take an exam, so the bare
+form asks for the pool and then takes one.
 
 ## You supply the question pool
 
@@ -94,14 +95,14 @@ default on one question's wording, so there is no reason to prefer it.
 Given a PDF, the script writes the text dump alongside it and reuses it on later
 runs, falling back to a temporary file if that directory is not writable.
 
-## Sitting an exam
+## Taking an exam
 
 Questions come one at a time. Answer `A`, `B`, `C` or `D`, or press `q` to
 abandon the attempt: nothing is saved and nothing is scored, so treat it as
 walking away rather than pausing. There is no resume.
 
 Finish, and your answers are written to the working directory as
-`technician_answers_2026-08-12_090145.txt`, named for the element you sat and
+`technician_answers_2026-08-12_090145.txt`, named for the element you took and
 when. The report gives your score, pass or fail, a per-subelement breakdown, and
 every question you missed with the correct answer.
 
@@ -118,14 +119,14 @@ results are usually about the exact question rather than the topic at large.
 python3 cramfest.py --pool pool.pdf --score technician_answers_2026-08-12_090145.txt
 ```
 
-**Score against the same pool you sat.** Not merely the same element: the same
+**Score against the same pool you took.** Not merely the same element: the same
 release. A question ID like `T1C01` names a slot in the pool's structure, not a
 question for all time, so every four-yearly release reuses the same IDs for
 different questions. Score a 2026-2030 Technician attempt against the 2030-2034
 pool and every ID resolves, nothing looks wrong, and the result is meaningless.
 Using the wrong *element* is safe by comparison, because it fails outright.
 
-So the answers file opens with a line naming the pool it was sat against:
+So the answers file opens with a line naming the pool it was taken against:
 
 ```
 # pool: 2026-2030 Technician Pool and Syllabus Public Release Feb 19 2026.pdf
@@ -141,7 +142,7 @@ Scoring against:          2026-2030 Technician Pool ... Feb 19 2026.pdf
 ```
 
 It reports rather than refuses, because the two can differ innocently: you
-renamed the pool, or sat it from the PDF and are scoring from the text dump.
+renamed the pool, or took it from the PDF and are scoring from the text dump.
 Read the two lines and judge. A file with no header scores normally and reports
 its pool as `unrecorded`.
 
@@ -203,7 +204,7 @@ Groups run 8-15 questions and subelements 23-99, so `--count` caps a long one:
 python3 cramfest.py --pool pool.pdf --drill E7 --count 20
 ```
 
-A count of nought, or one larger than the area holds, asks the whole area rather
+A count of zero, or one larger than the area holds, asks the whole area rather
 than complaining. Which questions you get is random too, so drilling the same
 area twice is not the same drill.
 
@@ -301,7 +302,7 @@ Without tesseract, or from a text pool, the question says this instead:
 Refer to PDF for Figure T-1
 ```
 
-so keep the pool PDF to hand either way. Figures are extracted once and cached
+so keep the pool PDF on hand either way. Figures are extracted once and cached
 beside the pool, or in a temporary directory if that is not writable.
 
 ## On Windows
@@ -319,7 +320,7 @@ winget install -e --id Schard.Poppler
 winget install -e --id UB-Mannheim.TesseractOCR
 ```
 
-Close the terminal and open a new one afterwards, so it picks up the newly
+Close the terminal and open a new one afterward, so it picks up the newly
 installed programs.
 
 | What it gives you | Without it |
@@ -327,7 +328,7 @@ installed programs.
 | **Poppler** reads the question pool out of the PDF | you must paste the pool into a text file yourself |
 | **Tesseract** identifies the diagrams | questions say `Refer to PDF for Figure T-1` instead of linking it |
 
-Neither is required to sit an exam. If `winget` is not recognised, your Windows
+Neither is required to take an exam. If `winget` is not recognized, your Windows
 is too old for it; download poppler and tesseract from their own websites
 instead, or skip poppler entirely and paste the pool into a text file, as under
 *Reading a PDF needs pdftotext*.
@@ -340,3 +341,7 @@ report is unpleasant to read.
 
 If tesseract was installed somewhere other than `PATH`, the script also looks in
 `C:\Program Files\Tesseract-OCR`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -3,7 +3,7 @@
 Ham radio license exam practice, driven by an FCC question pool.
 
 Usage:
-    cramfest.py --pool <pool>                        sit an exam
+    cramfest.py --pool <pool>                        take an exam
     cramfest.py --pool <pool> --score <answers>      score a saved file
     cramfest.py --pool <pool> --weak <answers>...    rank weak areas
     cramfest.py --pool <pool> --drill <area>         drill one area
@@ -102,7 +102,7 @@ TESSERACT_PATHS = (
 # Naming the codec rather than taking the locale's keeps it that way on a
 # machine whose locale says otherwise, where the pool's curly quotes and
 # en-dashes would otherwise raise. Bad bytes become replacement characters:
-# a mangled question still lets you sit the exam, a traceback does not.
+# a mangled question still lets you take the exam, a traceback does not.
 TEXT = {"encoding": "utf-8", "errors": "replace"}
 
 
@@ -402,7 +402,7 @@ def administer(pool, pool_path, questions, out_path, figures, feedback=False):
     answered is kept when you stop early: the pool is longer than a
     sitting, so stopping is how these sessions normally end. Without it,
     stopping abandons the attempt, because finishing is the point of
-    sitting an exam or a drill.
+    taking an exam or a drill.
     """
     given = []
     for position, qid in enumerate(questions, 1):
@@ -545,7 +545,7 @@ def prompt(label, default=None):
 
 
 def session_path(pool, kind):
-    """Name a finished session after its element and the time it was sat.
+    """Name a finished session after its element and the time it was taken.
 
     The element tells you which pool to hand back to --score; it does not
     distinguish two releases of the same element, which is what the header
