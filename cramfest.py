@@ -67,6 +67,8 @@ PDFTOTEXT_PATHS = (
 PASS_PERCENT = 74
 VALID = ("A", "B", "C", "D")
 
+Question = collections.namedtuple("Question", "answer reference body")
+
 # Question ID prefixes, matching _ID's character class.
 ELEMENTS = {"T": "technician", "G": "general", "E": "extra"}
 
@@ -99,11 +101,16 @@ TESSERACT_PATHS = (
 TEXT = {"encoding": "utf-8", "errors": "replace"}
 
 
-def find_pdftotext():
-    for path in PDFTOTEXT_PATHS:
+def find_binary(name, known):
+    """A tool from its usual home, or from PATH, or None."""
+    for path in known:
         if os.path.isfile(path):
             return path
-    found = shutil.which("pdftotext")
+    return shutil.which(name)
+
+
+def find_pdftotext():
+    found = find_binary("pdftotext", PDFTOTEXT_PATHS)
     if found:
         return found
     sys.exit(
@@ -123,6 +130,11 @@ def pool_name(pool_path):
     target's distinguishes one release of an element from the next.
     """
     return os.path.basename(os.path.realpath(pool_path))
+
+
+def writable_beside(path):
+    """Whether a file can be created at this path, cache falling back if not."""
+    return os.access(os.path.dirname(os.path.abspath(path)), os.W_OK)
 
 
 def dump_path(pool_path):
@@ -146,7 +158,7 @@ def pool_text(path):
     pdftotext = find_pdftotext()
     beside = dump_path(path)
 
-    if os.access(os.path.dirname(os.path.abspath(beside)), os.W_OK):
+    if writable_beside(beside):
         if (not os.path.exists(beside)
                 or os.path.getmtime(beside) < os.path.getmtime(path)):
             subprocess.run([pdftotext, path, beside], check=True)
@@ -199,7 +211,8 @@ def load_pool(path):
 
         parts = split_choices(content)
         if parts:  # a header with nothing question-shaped after it is not one
-            questions.append((head.group(1), head.group(2), head.group(3), parts))
+            questions.append((head.group(1), Question(head.group(2), head.group(3),
+                                                  "\n".join(parts))))
 
     opens = next((n for n, q in enumerate(questions)
                   if q[0][1:] == POOL_OPENS), None)
@@ -209,12 +222,7 @@ def load_pool(path):
             f"numbered {POOL_OPENS}. Is it an NCVEC question pool?"
         )
 
-    return {qid: (answer, reference, "\n".join(parts))
-            for qid, answer, reference, parts in questions[opens:]}
-
-
-def groups_of(pool):
-    return sorted({qid[:3] for qid in pool})
+    return dict(questions[opens:])
 
 
 def pass_mark(total):
@@ -230,17 +238,14 @@ def build_exam(pool, rng):
     for qid in pool:
         by_group[qid[:3]].append(qid)
 
-    exam = [rng.choice(by_group[group]) for group in groups_of(pool)]
+    exam = [rng.choice(qids) for qids in by_group.values()]
     rng.shuffle(exam)
     return exam
 
 
 def find_tesseract():
     """Tesseract, or None. Figure links are optional; the rest works without."""
-    for path in TESSERACT_PATHS:
-        if os.path.isfile(path):
-            return path
-    return shutil.which("tesseract")
+    return find_binary("tesseract", TESSERACT_PATHS)
 
 
 def read_caption(tesseract, image):
@@ -302,7 +307,7 @@ def load_figures(pool_path):
         return {}
 
     cache = pool_path[: -len(".pdf")] + ".figures"
-    if not os.access(os.path.dirname(os.path.abspath(cache)), os.W_OK):
+    if not writable_beside(cache):
         cache = tempfile.mkdtemp(suffix=".figures")
     os.makedirs(cache, exist_ok=True)
 
@@ -363,24 +368,32 @@ def write_answers(out_path, pool_path, given):
             out.write(f"{qid} {answer}\n")
 
 
-def take_exam(pool, pool_path, out_path, rng, figures):
-    exam = build_exam(pool, rng)
-    print(f"{len(exam)} questions, one from each group. "
-          f"{pass_mark(len(exam))} correct to pass.")
-    print(f"Answers are saved to {out_path} when you finish.")
+def administer(pool, pool_path, questions, out_path, figures):
+    """Ask each question in turn, saving the answers if the reader finishes.
 
+    Returns None when abandoned, having written nothing.
+    """
     given = []
-    for position, qid in enumerate(exam, 1):
-        _answer, reference, body = pool[qid]
-        answer = ask(qid, position, len(exam), reference, body, figures)
+    for position, qid in enumerate(questions, 1):
+        question = pool[qid]
+        answer = ask(qid, position, len(questions), question.reference,
+                     question.body, figures)
         if answer == "Q":
-            print(f"\nAbandoned after {position - 1} of {len(exam)}. "
+            print(f"\nAbandoned after {position - 1} of {len(questions)}. "
                   "Nothing saved.")
             return None
         given.append((qid, answer))
 
     write_answers(out_path, pool_path, given)
     return given
+
+
+def take_exam(pool, pool_path, out_path, rng, figures):
+    exam = build_exam(pool, rng)
+    print(f"{len(exam)} questions, one from each group. "
+          f"{pass_mark(len(exam))} correct to pass.")
+    print(f"Answers are saved to {out_path} when you finish.")
+    return administer(pool, pool_path, exam, out_path, figures)
 
 
 def read_answers(path):
@@ -438,7 +451,7 @@ def missed_in(given, pool):
     unknown = [qid for qid, _ in given if qid not in pool]
     if unknown:
         sys.exit(f"Not in this pool: {', '.join(unknown)}. Wrong pool file?")
-    return [(qid, ans) for qid, ans in given if pool[qid][0] != ans]
+    return [(qid, ans) for qid, ans in given if pool[qid].answer != ans]
 
 
 def show_missed(missed, pool, figures):
@@ -448,10 +461,10 @@ def show_missed(missed, pool, figures):
 
     print(f"\nMissed {len(missed)}:")
     for qid, ans in missed:
-        answer, _reference, body = pool[qid]
-        print(f"\n[{qid}] you answered {ans}, correct is {answer}")
-        print(with_figures(body, figures))
-        print(explain_link(qid, body))
+        question = pool[qid]
+        print(f"\n[{qid}] you answered {ans}, correct is {question.answer}")
+        print(with_figures(question.body, figures))
+        print(explain_link(qid, question.body))
 
 
 def report(given, pool, figures):
@@ -493,16 +506,17 @@ def prompt(label, default=None):
             return default
 
 
-def answers_path(pool):
-    """Name the answers file after the exam it came from.
+def session_path(pool, kind):
+    """Name a finished session after its element and the time it was sat.
 
-    The element is the only pool identity carried anywhere, so it goes in
-    the filename: it tells you which pool to hand back to --score. It does
-    not distinguish two releases of the same element.
+    The element tells you which pool to hand back to --score; it does not
+    distinguish two releases of the same element, which is what the header
+    inside the file is for. Drills carry their area too, so a glob for the
+    exam files does not collect them.
     """
     element = ELEMENTS[next(iter(pool))[0]]
     stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    return os.path.join(os.getcwd(), f"{element}_answers_{stamp}.txt")
+    return os.path.join(os.getcwd(), f"{element}_{kind}_{stamp}.txt")
 
 
 def parse_args():
@@ -537,7 +551,7 @@ def weak_areas(paths, pool):
                 continue
             for key in (qid[:2], qid[:3]):
                 asked[key] += 1
-                if pool[qid][0] != answer:
+                if pool[qid].answer != answer:
                     wrong[key] += 1
     return wrong, asked, unknown
 
@@ -606,31 +620,12 @@ def drill_questions(pool, area, count, rng):
     return chosen
 
 
-def drill_path(pool, area):
-    stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    element = ELEMENTS[next(iter(pool))[0]]
-    return os.path.join(os.getcwd(),
-                        f"{element}_drill_{area.upper()}_{stamp}.txt")
-
-
 def take_drill(pool, pool_path, area, count, rng, figures):
     questions = drill_questions(pool, area, count, rng)
-    out_path = drill_path(pool, area)
+    out_path = session_path(pool, f"drill_{area.upper()}")
     print(f"{len(questions)} questions from {area.upper()}.")
     print(f"Answers are saved to {out_path} when you finish.")
-
-    given = []
-    for position, qid in enumerate(questions, 1):
-        _answer, reference, body = pool[qid]
-        answer = ask(qid, position, len(questions), reference, body, figures)
-        if answer == "Q":
-            print(f"\nAbandoned after {position - 1} of {len(questions)}. "
-                  "Nothing saved.")
-            return None
-        given.append((qid, answer))
-
-    write_answers(out_path, pool_path, given)
-    return given
+    return administer(pool, pool_path, questions, out_path, figures)
 
 
 def main():
@@ -664,7 +659,7 @@ def main():
 
     pool = load_pool(args.pool)
     figures = load_figures(args.pool)
-    given = take_exam(pool, args.pool, answers_path(pool), random.Random(), figures)
+    given = take_exam(pool, args.pool, session_path(pool, "answers"), random.Random(), figures)
     if given is not None:
         report(given, pool, figures)
 
