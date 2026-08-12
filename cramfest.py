@@ -390,7 +390,9 @@ def verdict(qid, question, answer):
                 break
         said = f"  Incorrect. {named}"
 
-    return f"{said}\n  {explain_link(qid, question.body)}"
+    # Blank line first: the verdict lands right under what was typed
+    # otherwise, and reads as part of the prompt.
+    return f"\n{said}\n  {explain_link(qid, question.body)}"
 
 
 def administer(pool, pool_path, questions, out_path, figures, feedback=False):

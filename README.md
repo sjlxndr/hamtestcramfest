@@ -275,8 +275,13 @@ A. 146.520 MHz
 ...
 Your answer (A/B/C/D, or 'q' to stop): B
 
-  Wrong. A. 146.520 MHz
+  Incorrect. A. 146.520 MHz
+  Explain this question
 ```
+
+Every question gets the **Explain this question** link, right or wrong — unlike
+the end-of-exam report, which links only what you missed. Here you are studying,
+and a lucky guess is worth reading about too.
 
 On its own it works through the **whole pool** shuffled, not an exam's 35, so it
 is something to dip into rather than finish. Narrow it the same way you narrow a
