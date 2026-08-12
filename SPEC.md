@@ -205,6 +205,20 @@ exam name. Drills concentrate on weak areas by design, so folding them into the
 exam record would make those areas look permanently worse; keeping the names
 apart lets the reader choose which to include when reporting weak areas.
 
+**Feedback.** `--feedback` works through the pool a question at a time, saying
+after each whether the answer was right and, when it was not, what the answer
+was. It takes `--drill` and `--count` to narrow what it asks; on its own it asks
+the whole pool, shuffled, rather than an exam's worth.
+
+It is not scored. The feedback as you go is the point, so there is no tally, no
+pass mark and no list of what was missed at the end.
+
+Stopping saves what was answered, where an exam or a drill discards it. Those are
+bounded and finishing them is the point; this is the whole pool, so stopping is
+how the session normally ends, and what was answered still tells `--weak`
+something. The file is `<element>_feedback_<timestamp>.txt`, so it lands in
+neither an exam nor a drill glob.
+
 **Weak areas.** Given a set of answers files, the script reports where study is
 needed as three tables: subelements ranked worst first, then the groups missed
 laid out under that same ranking, then the same groups ranked worst first on
@@ -237,8 +251,8 @@ conversion that fails: each prints one line naming the problem and exits
 non-zero.
 
 **Command line.** `--pool` and `--score` as file arguments, `--weak` taking one
-or more answers files, and `--drill` taking a subelement or group with an
-optional `--count`. A bare run prompts for the pool, which is the only
+or more answers files, `--drill` taking a subelement or group with an optional
+`--count`, and `--feedback`, which takes those same two to narrow itself. A bare run prompts for the pool, which is the only
 thing it cannot derive. No data on stdin or stdout.
 
 ### Acceptance criteria
@@ -298,6 +312,12 @@ thing it cannot derive. No data on stdin or stdout.
     groups ordered by their subelement's rank, and groups ranked worst first,
     each with the fraction beside the percentage. The group tables omit groups
     answered correctly.
+22a. `--feedback` asks the whole pool in a random order, says whether each
+    answer was right and names the right one when it was not, and prints no
+    score, pass mark or missed list.
+22b. `--feedback` with `--drill` or `--count` asks only what those select.
+22c. Stopping a feedback session saves what was answered; stopping an exam or a
+    drill saves nothing.
 23. `--drill T8C` asks every question in that group and `--drill T8` every
     question in that subelement. Order varies between runs whether or not
     `--count` is given, and a constrained drill picks its questions at random.

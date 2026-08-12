@@ -16,10 +16,11 @@ python3 cramfest.py --pool <pool>
 - [You supply the question pool](#you-supply-the-question-pool)
 - [Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext)
 - [Sitting an exam](#sitting-an-exam)
-- [Diagrams](#diagrams)
 - [Scoring a saved file](#scoring-a-saved-file)
 - [Where you need to study](#where-you-need-to-study)
 - [Drilling one area](#drilling-one-area)
+- [Learning as you go](#learning-as-you-go)
+- [Diagrams](#diagrams)
 - [On Windows](#on-windows)
 
 ## Synopsis
@@ -29,6 +30,7 @@ cramfest.py --pool <pool>
 cramfest.py --pool <pool> --score <answers>
 cramfest.py --pool <pool> --weak <answers>...
 cramfest.py --pool <pool> --drill <area> [--count <n>]
+cramfest.py --pool <pool> --feedback [--drill <area>] [--count <n>]
 cramfest.py
 ```
 
@@ -38,7 +40,8 @@ cramfest.py
 | `--score <answers>` | score a saved answers file again instead of sitting an exam |
 | `--weak <answers>...` | rank what you keep getting wrong, across any number of files |
 | `--drill <area>` | ask every question in a subelement (`T8`) or group (`T8C`) |
-| `--count <n>` | with `--drill`, ask at most that many |
+| `--count <n>` | with `--drill` or `--feedback`, ask at most that many |
+| `--feedback` | work through the pool, told the answer after each question |
 | `-h`, `--help` | the same list, from the script |
 
 Every mode needs the pool. Nothing else is required to sit an exam, so the bare
@@ -102,51 +105,12 @@ Finish, and your answers are written to the working directory as
 when. The report gives your score, pass or fail, a per-subelement breakdown, and
 every question you missed with the correct answer.
 
+Some questions refer to a diagram, and most exams contain at least one — see
+[Diagrams](#diagrams) for how those work.
+
 Each missed question ends with an **Explain this question** link, which searches
 the web for that question by its ID. Study sites index the pool that way, so the
 results are usually about the exact question rather than the topic at large.
-
-## Diagrams
-
-Some questions refer to a figure: a schematic or chart printed in the pool PDF.
-Technician has 3 such figures across 12 questions, General 1 across 5, and Extra
-10 across 27.
-
-Where it can, the script turns the reference itself into a link:
-
-```
-Question 14/35  [T6C02]
-What is component 1 in figure T-1?      <- "figure T-1" is clickable
-A. Resistor
-B. Transistor
-C. Battery
-D. Connector
-```
-
-Clicking it opens the figure in whatever you use for images. That needs the pool
-as a PDF and **tesseract** installed:
-
-```
-sudo apt install tesseract-ocr                          # Debian, Ubuntu
-brew install tesseract                                  # macOS
-winget install -e --id UB-Mannheim.TesseractOCR         # Windows
-```
-
-Tesseract reads each figure's caption. The captions are drawn into the images
-rather than stored as text, and the figures cannot be told apart by their order:
-the Extra pool ships a hidden mask alongside every figure, and its numbering
-jumps from E7-3 straight to E9-1. Reading the caption is the only way to know
-which image is which, and showing you the wrong schematic would be worse than
-showing none.
-
-Without tesseract, or from a text pool, the question says this instead:
-
-```
-Refer to PDF for Figure T-1
-```
-
-so keep the pool PDF to hand either way. Figures are extracted once and cached
-beside the pool, or in a temporary directory if that is not writable.
 
 ## Scoring a saved file
 
@@ -255,6 +219,90 @@ would keep those areas looking bad. Glob whichever set you want:
 python3 cramfest.py --pool pool.pdf --weak technician_answers_*.txt   # exams
 python3 cramfest.py --pool pool.pdf --weak technician_drill_*.txt     # drills
 ```
+
+## Learning as you go
+
+`--feedback` tells you the answer straight after each question, instead of
+holding everything back to the end:
+
+```
+python3 cramfest.py --pool pool.pdf --feedback
+```
+
+```
+Question 1/409  [T2A02]
+What is the most common frequency for FM simplex operations in the 2 meter band?
+A. 146.520 MHz
+...
+Your answer (A/B/C/D, or 'q' to stop): B
+
+  Incorrect. A. 146.520 MHz
+  Explain this question
+```
+
+Every question gets the **Explain this question** link, right or wrong — unlike
+the end-of-exam report, which links only what you missed. Here you are studying,
+and a lucky guess is worth reading about too.
+
+On its own it works through the **whole pool** shuffled, not an exam's 35, so it
+is something to dip into rather than finish. Narrow it the same way you narrow a
+drill:
+
+```
+python3 cramfest.py --pool pool.pdf --feedback --drill T8C
+python3 cramfest.py --pool pool.pdf --feedback --drill T8 --count 20
+```
+
+It is not scored: no tally, no pass mark, no list of what you missed. You already
+saw each answer as you went.
+
+Press `q` to stop, and **what you answered is saved** — unlike an exam or a
+drill, which discard an unfinished attempt. Those are meant to be finished; this
+one is not. The file is `technician_feedback_<timestamp>.txt`, so it stays out of
+your exam and drill globs, and you can feed it to `--weak` if you want it
+counted.
+
+## Diagrams
+
+Some questions refer to a figure: a schematic or chart printed in the pool PDF.
+Technician has 3 such figures across 12 questions, General 1 across 5, and Extra
+10 across 27.
+
+Where it can, the script turns the reference itself into a link:
+
+```
+Question 14/35  [T6C02]
+What is component 1 in figure T-1?      <- "figure T-1" is clickable
+A. Resistor
+B. Transistor
+C. Battery
+D. Connector
+```
+
+Clicking it opens the figure in whatever you use for images. That needs the pool
+as a PDF and **tesseract** installed:
+
+```
+sudo apt install tesseract-ocr                          # Debian, Ubuntu
+brew install tesseract                                  # macOS
+winget install -e --id UB-Mannheim.TesseractOCR         # Windows
+```
+
+Tesseract reads each figure's caption. The captions are drawn into the images
+rather than stored as text, and the figures cannot be told apart by their order:
+the Extra pool ships a hidden mask alongside every figure, and its numbering
+jumps from E7-3 straight to E9-1. Reading the caption is the only way to know
+which image is which, and showing you the wrong schematic would be worse than
+showing none.
+
+Without tesseract, or from a text pool, the question says this instead:
+
+```
+Refer to PDF for Figure T-1
+```
+
+so keep the pool PDF to hand either way. Figures are extracted once and cached
+beside the pool, or in a temporary directory if that is not writable.
 
 ## On Windows
 
