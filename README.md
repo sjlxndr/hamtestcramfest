@@ -20,6 +20,7 @@ python3 cramfest.py --pool <pool>
 - [Scoring a saved file](#scoring-a-saved-file)
 - [Where you need to study](#where-you-need-to-study)
 - [Drilling one area](#drilling-one-area)
+- [Learning as you go](#learning-as-you-go)
 - [On Windows](#on-windows)
 
 ## Synopsis
@@ -29,6 +30,7 @@ cramfest.py --pool <pool>
 cramfest.py --pool <pool> --score <answers>
 cramfest.py --pool <pool> --weak <answers>...
 cramfest.py --pool <pool> --drill <area> [--count <n>]
+cramfest.py --pool <pool> --feedback [--drill <area>] [--count <n>]
 cramfest.py
 ```
 
@@ -38,7 +40,8 @@ cramfest.py
 | `--score <answers>` | score a saved answers file again instead of sitting an exam |
 | `--weak <answers>...` | rank what you keep getting wrong, across any number of files |
 | `--drill <area>` | ask every question in a subelement (`T8`) or group (`T8C`) |
-| `--count <n>` | with `--drill`, ask at most that many |
+| `--count <n>` | with `--drill` or `--feedback`, ask at most that many |
+| `--feedback` | work through the pool, told the answer after each question |
 | `-h`, `--help` | the same list, from the script |
 
 Every mode needs the pool. Nothing else is required to sit an exam, so the bare
@@ -255,6 +258,43 @@ would keep those areas looking bad. Glob whichever set you want:
 python3 cramfest.py --pool pool.pdf --weak technician_answers_*.txt   # exams
 python3 cramfest.py --pool pool.pdf --weak technician_drill_*.txt     # drills
 ```
+
+## Learning as you go
+
+`--feedback` tells you the answer straight after each question, instead of
+holding everything back to the end:
+
+```
+python3 cramfest.py --pool pool.pdf --feedback
+```
+
+```
+Question 1/409  [T2A02]
+What is the most common frequency for FM simplex operations in the 2 meter band?
+A. 146.520 MHz
+...
+Your answer (A/B/C/D, or 'q' to stop): B
+
+  Wrong. A. 146.520 MHz
+```
+
+On its own it works through the **whole pool** shuffled, not an exam's 35, so it
+is something to dip into rather than finish. Narrow it the same way you narrow a
+drill:
+
+```
+python3 cramfest.py --pool pool.pdf --feedback --drill T8C
+python3 cramfest.py --pool pool.pdf --feedback --drill T8 --count 20
+```
+
+It is not scored: no tally, no pass mark, no list of what you missed. You already
+saw each answer as you went.
+
+Press `q` to stop, and **what you answered is saved** — unlike an exam or a
+drill, which discard an unfinished attempt. Those are meant to be finished; this
+one is not. The file is `technician_feedback_<timestamp>.txt`, so it stays out of
+your exam and drill globs, and you can feed it to `--weak` if you want it
+counted.
 
 ## On Windows
 

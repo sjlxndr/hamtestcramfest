@@ -354,7 +354,7 @@ def ask(qid, position, total, reference, body, figures):
           + (f"  (Ref: {reference})" if reference else ""))
     print(with_figures(body, figures))
     while True:
-        answer = input("Your answer (A/B/C/D, or 'q' to abandon): ")
+        answer = input("Your answer (A/B/C/D, or 'q' to stop): ")
         answer = answer.strip().upper()
         if answer in VALID or answer == "Q":
             return answer
@@ -368,10 +368,24 @@ def write_answers(out_path, pool_path, given):
             out.write(f"{qid} {answer}\n")
 
 
-def administer(pool, pool_path, questions, out_path, figures):
-    """Ask each question in turn, saving the answers if the reader finishes.
+def verdict(question, answer):
+    """Right or wrong, and what the answer was, for feedback as you go."""
+    if answer == question.answer:
+        return "  Correct."
+    for line in question.body.split("\n"):
+        if line.startswith(f"{question.answer}."):
+            return f"  Wrong. {line}"
+    return f"  Wrong. The answer is {question.answer}.\n"
 
-    Returns None when abandoned, having written nothing.
+
+def administer(pool, pool_path, questions, out_path, figures, feedback=False):
+    """Ask each question in turn, saving what was answered.
+
+    With feedback, the answer follows each question and whatever was
+    answered is kept when you stop early: the pool is longer than a
+    sitting, so stopping is how these sessions normally end. Without it,
+    stopping abandons the attempt, because finishing is the point of
+    sitting an exam or a drill.
     """
     given = []
     for position, qid in enumerate(questions, 1):
@@ -379,12 +393,19 @@ def administer(pool, pool_path, questions, out_path, figures):
         answer = ask(qid, position, len(questions), question.reference,
                      question.body, figures)
         if answer == "Q":
-            print(f"\nAbandoned after {position - 1} of {len(questions)}. "
-                  "Nothing saved.")
-            return None
+            print(f"\nStopped after {position - 1} of {len(questions)}.")
+            if not feedback:
+                print("Nothing saved.")
+                return None
+            break
         given.append((qid, answer))
+        if feedback:
+            print(verdict(question, answer))
 
-    write_answers(out_path, pool_path, given)
+    if given:
+        write_answers(out_path, pool_path, given)
+        if feedback:
+            print(f"Saved {len(given)} answers to {out_path}.")
     return given
 
 
@@ -531,6 +552,8 @@ def parse_args():
                         help="drill a subelement like T8 or a group like T8C")
     parser.add_argument("--count", type=int, metavar="N",
                         help="ask at most N of them, if the area holds more")
+    parser.add_argument("--feedback", action="store_true",
+                        help="work through the pool, told the answer each time")
     args = parser.parse_args()
 
     if args.pool is None:
@@ -608,7 +631,7 @@ def drill_questions(pool, area, count, rng):
     is meant by fewer than one, and asking for more than exists is just
     asking for everything.
     """
-    area = area.upper()
+    area = area.upper() if area else ""
     chosen = [qid for qid in pool if qid.startswith(area)]
     if not chosen:
         sys.exit(f"No questions in {area}. Give a subelement like T8, "
@@ -618,6 +641,21 @@ def drill_questions(pool, area, count, rng):
     if count is not None and 1 <= count < len(chosen):
         chosen = chosen[:count]
     return chosen
+
+
+def study(pool, pool_path, area, count, rng, figures):
+    """Work through the pool, or one area of it, told the answer each time.
+
+    Not scored: the feedback as you go is the point. Whatever was answered
+    is saved even when you stop early, because the default is the whole
+    pool and nobody reaches the end of 599 questions in a sitting.
+    """
+    questions = drill_questions(pool, area, count, rng)
+    out_path = session_path(pool, "feedback")
+    where = f" from {area.upper()}" if area else ""
+    print(f"{len(questions)} questions{where}, with the answer after each.")
+    print(f"What you answer is saved to {out_path}.")
+    administer(pool, pool_path, questions, out_path, figures, feedback=True)
 
 
 def take_drill(pool, pool_path, area, count, rng, figures):
@@ -636,6 +674,12 @@ def main():
         stream.reconfigure(errors="replace")
 
     args = parse_args()
+
+    if args.feedback:
+        pool = load_pool(args.pool)
+        study(pool, args.pool, args.drill, args.count, random.Random(),
+              load_figures(args.pool))
+        return
 
     if args.drill:
         pool = load_pool(args.pool)
