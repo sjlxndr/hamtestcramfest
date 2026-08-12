@@ -196,13 +196,9 @@ A report covers one exam element. Answers files name their element in every
 question ID, so the element is read from the answers rather than asked for, and
 a set spanning more than one is refused rather than combined.
 
-Subelement names come from the pool's own `SUBELEMENT` headings, which sit
-outside the anchored text and are read separately from it. The headings are not
-uniform: subelement 1 of Technician and General reads `COMMISSION’S RULES` with a
-curly apostrophe, General separates its heading with an en-dash where the others
-use a hyphen, and Extra's `SAFETY` heading carries a second hyphen before its
-bracket. A pattern that misses any of these silently drops one subelement's name
-rather than failing.
+Subelements and groups are named by their codes alone, `T8` and `T8C`. The pool's
+own headings would supply titles, but they are not uniform enough to parse
+reliably and the codes are what the reader looks things up by.
 
 **Failure.** No user mistake produces a traceback. A pool that does not exist,
 cannot be read, or is a directory; an answers file that is not there; a
@@ -269,11 +265,9 @@ thing it cannot derive. No data on stdin or stdout.
 22. A weak-areas report over the three answers files in hand ranks subelements
     worst first, with the fraction shown beside each percentage, and lists the
     missed groups beneath each subelement.
-23. Every subelement of every pool is named in the report: ten of ten for
-    Technician, General and Extra, including `COMMISSION’S RULES` and `SAFETY`.
-24. A set of answers files spanning more than one element is refused, naming
+23. A set of answers files spanning more than one element is refused, naming
     the elements found.
-25. Questions in an answers file that are absent from the pool are reported
+24. Questions in an answers file that are absent from the pool are reported
     rather than counted, so scoring against the wrong release is visible.
 
 ## Out of scope
