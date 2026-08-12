@@ -85,7 +85,7 @@ line.
 rather than inherited from the locale, because that is what `pdftotext` writes
 and a machine whose locale says otherwise would fail on a sound pool. Bytes that
 do not decode become replacement characters, and stdout and stderr are set to
-replace what they cannot encode. A mangled question still lets the reader sit
+replace what they cannot encode. A mangled question still lets the reader take
 the exam; a traceback does not.
 
 **Extraction-independent.** Any faithful text rendering of the pool is accepted:

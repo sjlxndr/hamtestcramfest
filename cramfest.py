@@ -102,7 +102,7 @@ TESSERACT_PATHS = (
 # Naming the codec rather than taking the locale's keeps it that way on a
 # machine whose locale says otherwise, where the pool's curly quotes and
 # en-dashes would otherwise raise. Bad bytes become replacement characters:
-# a mangled question still lets you sit the exam, a traceback does not.
+# a mangled question still lets you take the exam, a traceback does not.
 TEXT = {"encoding": "utf-8", "errors": "replace"}
 
 

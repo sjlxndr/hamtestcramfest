@@ -46,7 +46,7 @@ cramfest.py
 | `-h`, `--help` | the same list, from the script |
 
 Every mode needs the pool. Nothing else is required to take an exam, so the bare
-form asks for the pool and then sits one.
+form asks for the pool and then takes one.
 
 ## You supply the question pool
 
