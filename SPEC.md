@@ -187,11 +187,17 @@ tesseract is installed, and that the reader should otherwise keep the pool PDF
 open to consult figures directly.
 
 **Weak areas.** Given a set of answers files, the script reports where study is
-needed as two tables, each ranked worst first: one by subelement, `T8`, and one
-by group, `T8C`. The counts are shown beside every percentage, so a rate resting
-on two answers is visible as such without needing to be flagged.
+needed as three tables: subelements ranked worst first, then the groups missed
+in pool order, then the same groups ranked worst first. The counts are shown
+beside every percentage, so a rate resting on two answers is visible as such
+without needing to be flagged.
 
-The subelement table lists every subelement seen. The group table lists only
+Groups appear twice because the two orderings answer different questions. Ranked
+says what to study next; pool order says where the gaps fall as the syllabus
+runs, and is how the reader finds a group they already have in mind. Pool order
+closes with subelement 0 rather than opening with it.
+
+The subelement table lists every subelement seen. The group tables list only
 groups with at least one wrong answer, since a pool has thirty-five or fifty
 groups and the ones answered correctly are not what the reader is looking for.
 
@@ -266,9 +272,10 @@ thing it cannot derive. No data on stdin or stdout.
 21. A pool path that does not exist, is unreadable, or is a directory prints
     one line and exits 1. So does a missing answers file. No traceback reaches
     the reader.
-22. A weak-areas report over the answers files in hand prints two tables, by
-    subelement and by group, each ranked worst first with the fraction shown
-    beside each percentage. The group table omits groups answered correctly.
+22. A weak-areas report prints three tables: subelements ranked worst first,
+    groups in pool order, and groups ranked worst first, each with the fraction
+    beside the percentage. The group tables omit groups answered correctly, and
+    pool order places subelement 0 last.
 23. Questions in an answers file that are absent from the pool are reported
     rather than counted, so scoring against the wrong release is visible.
 

@@ -522,6 +522,11 @@ def weakest(keys, wrong, asked):
     return sorted(keys, key=lambda k: (-wrong[k] / asked[k], -asked[k], k))
 
 
+def pool_order(keys):
+    """As the pool runs: subelement 0 closes it rather than opening it."""
+    return sorted(keys, key=lambda k: (k[1] == "0", k))
+
+
 def report_weak(paths, pool):
     wrong, asked, unknown = weak_areas(paths, pool)
     if not asked:
@@ -530,15 +535,19 @@ def report_weak(paths, pool):
     answers = sum(asked[k] for k in asked if len(k) == 2)
     print(f"{answers} answers over {len(paths)} file(s)\n")
 
-    for title, keys in (
-            ("By subelement", [k for k in asked if len(k) == 2]),
-            ("By group", [k for k in asked if len(k) == 3 and wrong[k]]),
+    subelements = [k for k in asked if len(k) == 2]
+    groups = [k for k in asked if len(k) == 3 and wrong[k]]
+
+    for title, ordered in (
+            ("By subelement, weakest first", weakest(subelements, wrong, asked)),
+            ("By group, in pool order", pool_order(groups)),
+            ("By group, weakest first", weakest(groups, wrong, asked)),
     ):
         print(title)
-        for key in weakest(keys, wrong, asked):
+        for key in ordered:
             share = 100 * wrong[key] / asked[key]
             print(f"  {key:<4} {share:5.1f}%   {wrong[key]} of {asked[key]} wrong")
-        if not keys:
+        if not ordered:
             print("  nothing missed")
         print()
 
