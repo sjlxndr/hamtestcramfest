@@ -186,14 +186,40 @@ that questions depending on a figure are linked to it when the pool is a PDF and
 tesseract is installed, and that the reader should otherwise keep the pool PDF
 open to consult figures directly.
 
+**Weak areas.** Given a set of answers files, the script reports where study is
+needed as three tables: subelements ranked worst first, then the groups missed
+laid out under that same ranking, then the same groups ranked worst first on
+their own. The counts are shown
+beside every percentage, so a rate resting on two answers is visible as such
+without needing to be flagged.
+
+Groups appear twice because the two orderings answer different questions. Ranked
+on their own says what to study next. Laid out under the subelement ranking, the
+two tables line up, so the groups that drove a subelement's position sit together
+beneath it and a weak subelement can be read as the handful of groups it is made
+of. Within a subelement the groups run in their own order.
+
+The subelement table lists every subelement seen. The group tables list only
+groups with at least one wrong answer, since a pool has thirty-five or fifty
+groups and the ones answered correctly are not what the reader is looking for.
+
+A report covers one exam element, because it is scored against one pool.
+Questions from another element are not in that pool, so they are listed as
+uncounted alongside anything else the pool does not hold, and need no separate
+check.
+
+Subelements and groups are named by their codes alone, `T8` and `T8C`. The pool's
+own headings would supply titles, but they are not uniform enough to parse
+reliably and the codes are what the reader looks things up by.
+
 **Failure.** No user mistake produces a traceback. A pool that does not exist,
 cannot be read, or is a directory; an answers file that is not there; a
 conversion that fails: each prints one line naming the problem and exits
 non-zero.
 
-**Command line.** `--pool` and `--score` as file arguments. A bare run prompts
-for the pool, which is the only thing it cannot derive. No data on stdin or
-stdout.
+**Command line.** `--pool` and `--score` as file arguments, and `--weak` taking
+one or more answers files. A bare run prompts for the pool, which is the only
+thing it cannot derive. No data on stdin or stdout.
 
 ### Acceptance criteria
 
@@ -248,6 +274,12 @@ stdout.
 21. A pool path that does not exist, is unreadable, or is a directory prints
     one line and exits 1. So does a missing answers file. No traceback reaches
     the reader.
+22. A weak-areas report prints three tables: subelements ranked worst first,
+    groups ordered by their subelement's rank, and groups ranked worst first,
+    each with the fraction beside the percentage. The group tables omit groups
+    answered correctly.
+23. Questions in an answers file that are absent from the pool are reported
+    rather than counted, so scoring against the wrong release is visible.
 
 ## Out of scope
 
@@ -258,20 +290,23 @@ stdout.
 - Any GUI, web interface, or TUI beyond line-by-line prompts.
 - Resuming an interrupted exam. Quitting discards the attempt, and the answers
   file is deliberately not a checkpoint.
-- Progress tracking across sessions, spaced repetition, or weighting toward
-  previously missed questions.
+- Spaced repetition, or weighting an exam toward previously missed questions.
+  Reading past attempts to say where study is needed is in scope; changing what
+  the next exam asks on that basis is not.
 - Shuffling or renaming answer choices.
 - Validating or correcting the pool beyond parsing it.
 - Reproducing the existing per-subelement study quizzes.
 
 ## Deferred
 
-- Opening the pool PDF to the page holding a referenced figure.
 - A study mode that drills a single subelement rather than a full exam.
 - A seed argument for reproducible exams.
 
 ## Assumptions
 
+- A weak-areas report is read from answers files alone. Nothing is recorded
+  between runs beyond those files, so the set the reader passes is the whole
+  history the report knows about.
 - Figure captions are rendered into the images and are legible to OCR. True of
   all fourteen figures in the three pools in hand: thirteen on the first
   attempt, one on the retry, about two seconds per pool, once, cached after.

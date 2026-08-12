@@ -171,6 +171,49 @@ your browser searches for an explanation of that question. It is a terminal
 hyperlink, so it needs a terminal that supports them — most modern ones do, and
 those that do not simply show the words without the link.
 
+## Where you need to study
+
+Point `--weak` at any number of saved answers files and it ranks what you keep
+getting wrong, by subelement and then by group:
+
+```
+python3 cramfest.py --pool pool.pdf --weak technician_answers_*.txt
+```
+
+```
+70 answers over 2 file(s)
+
+By subelement, weakest first
+  T1    18.2%   2 of 11 wrong
+  T8    15.4%   2 of 13 wrong
+  T9    12.5%   1 of 8 wrong
+  ...
+
+By group, under the subelement ranking
+  T1A   33.3%   1 of 3 wrong
+  T1C   50.0%   1 of 2 wrong
+  T8A  100.0%   1 of 1 wrong
+  ...
+
+By group, weakest first
+  T8A  100.0%   1 of 1 wrong
+  T1C   50.0%   1 of 2 wrong
+  T1A   33.3%   1 of 3 wrong
+  ...
+```
+
+The counts sit beside every percentage because they matter: `1 of 1 wrong` is
+100% and means almost nothing, while `2 of 13` is a real signal.
+
+The missed groups appear twice on purpose. Ranked on their own tells you what to
+study next. Laid out under the subelement ranking, the two tables line up, so you
+can see which groups made a subelement weak. Both list only groups you have
+missed at least once.
+
+Files are scored against the pool you pass, so anything not in that pool, an
+older release or a different element, is listed as uncounted rather than folded
+into the numbers.
+
 ## Running it bare
 
 Run it with no arguments and it prompts for what it needs, offering a
