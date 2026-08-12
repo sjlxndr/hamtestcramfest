@@ -183,21 +183,32 @@ python3 cramfest.py --pool pool.pdf --weak technician_answers_*.txt
 ```
 70 answers over 2 file(s)
 
-By subelement
+By subelement, weakest first
   T1    18.2%   2 of 11 wrong
   T8    15.4%   2 of 13 wrong
   T9    12.5%   1 of 8 wrong
   ...
 
-By group
+By group, in pool order
+  T1A   33.3%   1 of 3 wrong
+  T1C   50.0%   1 of 2 wrong
+  T2A   33.3%   1 of 3 wrong
+  ...
+
+By group, weakest first
   T8A  100.0%   1 of 1 wrong
   T1C   50.0%   1 of 2 wrong
   T1A   33.3%   1 of 3 wrong
+  ...
 ```
 
 The counts sit beside every percentage because they matter: `1 of 1 wrong` is
-100% and means almost nothing, while `2 of 13` is a real signal. The group table
-lists only groups you have missed at least once.
+100% and means almost nothing, while `2 of 13` is a real signal.
+
+The missed groups appear twice on purpose. Ranked tells you what to study next;
+pool order tells you where the gaps fall as the syllabus runs, and is how you
+find a group you already have in mind. Both list only groups you have missed at
+least once.
 
 Files are scored against the pool you pass, so anything not in that pool, an
 older release or a different element, is listed as uncounted rather than folded
