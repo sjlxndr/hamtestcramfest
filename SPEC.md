@@ -187,14 +187,18 @@ tesseract is installed, and that the reader should otherwise keep the pool PDF
 open to consult figures directly.
 
 **Weak areas.** Given a set of answers files, the script reports where study is
-needed, ranked worst first. Subelements are listed with the share answered
-wrongly and the counts behind it, and under each, the groups within it that were
-missed. The counts are shown beside every percentage, so a rate resting on two
-answers is visible as such without needing to be flagged.
+needed as two tables, each ranked worst first: one by subelement, `T8`, and one
+by group, `T8C`. The counts are shown beside every percentage, so a rate resting
+on two answers is visible as such without needing to be flagged.
 
-A report covers one exam element. Answers files name their element in every
-question ID, so the element is read from the answers rather than asked for, and
-a set spanning more than one is refused rather than combined.
+The subelement table lists every subelement seen. The group table lists only
+groups with at least one wrong answer, since a pool has thirty-five or fifty
+groups and the ones answered correctly are not what the reader is looking for.
+
+A report covers one exam element, because it is scored against one pool.
+Questions from another element are not in that pool, so they are listed as
+uncounted alongside anything else the pool does not hold, and need no separate
+check.
 
 Subelements and groups are named by their codes alone, `T8` and `T8C`. The pool's
 own headings would supply titles, but they are not uniform enough to parse
@@ -262,12 +266,10 @@ thing it cannot derive. No data on stdin or stdout.
 21. A pool path that does not exist, is unreadable, or is a directory prints
     one line and exits 1. So does a missing answers file. No traceback reaches
     the reader.
-22. A weak-areas report over the three answers files in hand ranks subelements
-    worst first, with the fraction shown beside each percentage, and lists the
-    missed groups beneath each subelement.
-23. A set of answers files spanning more than one element is refused, naming
-    the elements found.
-24. Questions in an answers file that are absent from the pool are reported
+22. A weak-areas report over the answers files in hand prints two tables, by
+    subelement and by group, each ranked worst first with the fraction shown
+    beside each percentage. The group table omits groups answered correctly.
+23. Questions in an answers file that are absent from the pool are reported
     rather than counted, so scoring against the wrong release is visible.
 
 ## Out of scope

@@ -490,11 +490,61 @@ def parse_args():
     )
     parser.add_argument("--pool", help="question pool, PDF or text dump")
     parser.add_argument("--score", help="score this answers file, no exam")
+    parser.add_argument("--weak", nargs="+", metavar="FILE",
+                        help="report weak areas across these answers files")
     args = parser.parse_args()
 
     if args.pool is None:
         args.pool = prompt("Question pool file")
     return args
+
+
+def weak_areas(paths, pool):
+    """Wrong and asked counts per subelement and per group, over every file."""
+    wrong = collections.Counter()
+    asked = collections.Counter()
+    unknown = []
+    for path in paths:
+        _recorded, given = read_answers(path)
+        for qid, answer in given:
+            if qid not in pool:
+                unknown.append(qid)
+                continue
+            for key in (qid[:2], qid[:3]):
+                asked[key] += 1
+                if pool[qid][0] != answer:
+                    wrong[key] += 1
+    return wrong, asked, unknown
+
+
+def weakest(keys, wrong, asked):
+    """Worst first, then by how much was asked, then by name."""
+    return sorted(keys, key=lambda k: (-wrong[k] / asked[k], -asked[k], k))
+
+
+def report_weak(paths, pool):
+    wrong, asked, unknown = weak_areas(paths, pool)
+    if not asked:
+        sys.exit("No questions in those files are in this pool.")
+
+    answers = sum(asked[k] for k in asked if len(k) == 2)
+    print(f"{answers} answers over {len(paths)} file(s)\n")
+
+    for title, keys in (
+            ("By subelement", [k for k in asked if len(k) == 2]),
+            ("By group", [k for k in asked if len(k) == 3 and wrong[k]]),
+    ):
+        print(title)
+        for key in weakest(keys, wrong, asked):
+            share = 100 * wrong[key] / asked[key]
+            print(f"  {key:<4} {share:5.1f}%   {wrong[key]} of {asked[key]} wrong")
+        if not keys:
+            print("  nothing missed")
+        print()
+
+    if unknown:
+        seen = sorted(set(unknown))
+        print(f"Not in this pool, and not counted: {', '.join(seen)}")
 
 
 def main():
@@ -505,6 +555,10 @@ def main():
         stream.reconfigure(errors="replace")
 
     args = parse_args()
+
+    if args.weak:
+        report_weak(args.weak, load_pool(args.pool))
+        return
 
     if args.score:
         recorded, given = read_answers(args.score)
