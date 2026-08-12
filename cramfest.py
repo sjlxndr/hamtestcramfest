@@ -398,11 +398,9 @@ def verdict(qid, question, answer):
 def administer(pool, pool_path, questions, out_path, figures, feedback=False):
     """Ask each question in turn, saving what was answered.
 
-    With feedback, the answer follows each question and whatever was
-    answered is kept when you stop early: the pool is longer than a
-    sitting, so stopping is how these sessions normally end. Without it,
-    stopping abandons the attempt, because finishing is the point of
-    taking an exam or a drill.
+    With feedback, the answer follows each question. An out_path of None
+    writes nothing at all, which is what feedback wants: the verdicts are
+    the output, so there is no file to keep or discard.
     """
     given = []
     for position, qid in enumerate(questions, 1):
@@ -411,18 +409,15 @@ def administer(pool, pool_path, questions, out_path, figures, feedback=False):
                      question.body, figures)
         if answer == "Q":
             print(f"\nStopped after {position - 1} of {len(questions)}.")
-            if not feedback:
+            if out_path:
                 print("Nothing saved.")
-                return None
-            break
+            return None
         given.append((qid, answer))
         if feedback:
             print(verdict(qid, question, answer))
 
-    if given:
+    if out_path:
         write_answers(out_path, pool_path, given)
-        if feedback:
-            print(f"Saved {len(given)} answers to {out_path}.")
     return given
 
 
@@ -663,16 +658,13 @@ def drill_questions(pool, area, count, rng):
 def study(pool, pool_path, area, count, rng, figures):
     """Work through the pool, or one area of it, told the answer each time.
 
-    Not scored: the feedback as you go is the point. Whatever was answered
-    is saved even when you stop early, because the default is the whole
-    pool and nobody reaches the end of 599 questions in a sitting.
+    Nothing is scored and nothing is written: the verdict after each
+    question is the whole output.
     """
     questions = drill_questions(pool, area, count, rng)
-    out_path = session_path(pool, "feedback")
     where = f" from {area.upper()}" if area else ""
     print(f"{len(questions)} questions{where}, with the answer after each.")
-    print(f"What you answer is saved to {out_path}.")
-    administer(pool, pool_path, questions, out_path, figures, feedback=True)
+    administer(pool, pool_path, questions, None, figures, feedback=True)
 
 
 def take_drill(pool, pool_path, area, count, rng, figures):
