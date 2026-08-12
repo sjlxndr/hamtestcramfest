@@ -213,11 +213,9 @@ the whole pool, shuffled, rather than an exam's worth.
 It is not scored. The feedback as you go is the point, so there is no tally, no
 pass mark and no list of what was missed at the end.
 
-Stopping saves what was answered, where an exam or a drill discards it. Those are
-bounded and finishing them is the point; this is the whole pool, so stopping is
-how the session normally ends, and what was answered still tells `--weak`
-something. The file is `<element>_feedback_<timestamp>.txt`, so it lands in
-neither an exam nor a drill glob.
+Nothing is written. An exam or a drill saves what it asked so it can be scored
+again; here the verdicts have already been given as they went, so there is no
+file to keep and none to clean up.
 
 **Weak areas.** Given a set of answers files, the script reports where study is
 needed as three tables: subelements ranked worst first, then the groups missed
@@ -316,8 +314,8 @@ thing it cannot derive. No data on stdin or stdout.
     answer was right and names the right one when it was not, and prints no
     score, pass mark or missed list.
 22b. `--feedback` with `--drill` or `--count` asks only what those select.
-22c. Stopping a feedback session saves what was answered; stopping an exam or a
-    drill saves nothing.
+22c. A feedback session writes no file, whether it is stopped early or run to
+    the end.
 23. `--drill T8C` asks every question in that group and `--drill T8` every
     question in that subelement. Order varies between runs whether or not
     `--count` is given, and a constrained drill picks its questions at random.

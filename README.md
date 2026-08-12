@@ -254,14 +254,9 @@ python3 cramfest.py --pool pool.pdf --feedback --drill T8C
 python3 cramfest.py --pool pool.pdf --feedback --drill T8 --count 20
 ```
 
-It is not scored: no tally, no pass mark, no list of what you missed. You already
-saw each answer as you went.
-
-Press `q` to stop, and **what you answered is saved** — unlike an exam or a
-drill, which discard an unfinished attempt. Those are meant to be finished; this
-one is not. The file is `technician_feedback_<timestamp>.txt`, so it stays out of
-your exam and drill globs, and you can feed it to `--weak` if you want it
-counted.
+Press `q` to stop whenever you like. Nothing is scored and **nothing is
+written** — no tally, no pass mark, no answers file. You saw each answer as you
+went, so there is nothing left to report afterward.
 
 ## Diagrams
 
