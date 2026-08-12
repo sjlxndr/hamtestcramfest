@@ -9,6 +9,7 @@
 # quiz results the list above exists to exclude.
 !/SPEC.md
 !/README.md
+!/LICENSE
 
 # Worktrees are excluded explicitly, not left to the catch-all above, so the
 # entry survives any future move away from a deny-all list.

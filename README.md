@@ -22,6 +22,7 @@ python3 cramfest.py --pool <pool>
 - [Learning as you go](#learning-as-you-go)
 - [Diagrams](#diagrams)
 - [On Windows](#on-windows)
+- [License](#license)
 
 ## Synopsis
 
@@ -327,7 +328,7 @@ installed programs.
 | **Poppler** reads the question pool out of the PDF | you must paste the pool into a text file yourself |
 | **Tesseract** identifies the diagrams | questions say `Refer to PDF for Figure T-1` instead of linking it |
 
-Neither is required to sit an exam. If `winget` is not recognised, your Windows
+Neither is required to sit an exam. If `winget` is not recognized, your Windows
 is too old for it; download poppler and tesseract from their own websites
 instead, or skip poppler entirely and paste the pool into a text file, as under
 *Reading a PDF needs pdftotext*.
@@ -340,3 +341,7 @@ report is unpleasant to read.
 
 If tesseract was installed somewhere other than `PATH`, the script also looks in
 `C:\Program Files\Tesseract-OCR`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
