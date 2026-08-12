@@ -328,7 +328,7 @@ thing it cannot derive. No data on stdin or stdout.
 
 ## Deferred
 
-- A seed argument for reproducible exams.
+Nothing.
 
 ## Assumptions
 
