@@ -7,20 +7,30 @@ exam the way a Volunteer Examiner Coordinator does: one question drawn at random
 from each subelement group in the pool.
 
 ```
-python3 cramfest.py --pool "2026-2030 Technician Pool and Syllabus Public Release Feb 19 2026.pdf"
+python3 cramfest.py --pool <pool>
 ```
 
-## What it does
+## Synopsis
 
-| Run | Does |
+```
+cramfest.py --pool <pool>
+cramfest.py --pool <pool> --score <answers>
+cramfest.py --pool <pool> --weak <answers>...
+cramfest.py --pool <pool> --drill <area> [--count <n>]
+cramfest.py
+```
+
+| Option | Meaning |
 |---|---|
-| `--pool POOL` | sit a full exam |
-| `--pool POOL --score FILE` | score a saved answers file again |
-| `--pool POOL --weak FILE...` | rank what you keep getting wrong |
-| `--pool POOL --drill AREA` | drill one subelement or group |
+| `--pool <pool>` | the question pool: the released PDF, or a text dump of one |
+| `--score <answers>` | score a saved answers file again instead of sitting an exam |
+| `--weak <answers>...` | rank what you keep getting wrong, across any number of files |
+| `--drill <area>` | ask every question in a subelement (`T8`) or group (`T8C`) |
+| `--count <n>` | with `--drill`, ask at most that many |
+| `-h`, `--help` | the same list, from the script |
 
-Every mode needs the pool, and nothing else is required to sit an exam, so a
-bare `python3 cramfest.py` asks for the pool and then sits one.
+Every mode needs the pool. Nothing else is required to sit an exam, so the bare
+form asks for the pool and then sits one.
 
 ## You supply the question pool
 
