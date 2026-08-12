@@ -12,15 +12,15 @@ python3 cramfest.py --pool "2026-2030 Technician Pool and Syllabus Public Releas
 
 ## What it does
 
-| | |
+| Run | Does |
 |---|---|
 | `--pool POOL` | sit a full exam |
 | `--pool POOL --score FILE` | score a saved answers file again |
 | `--pool POOL --weak FILE...` | rank what you keep getting wrong |
 | `--pool POOL --drill AREA` | drill one subelement or group |
 
-`--pool` is the only thing it cannot work out for itself, so a bare
-`python3 cramfest.py` asks for it and then sits an exam.
+Every mode needs the pool, and nothing else is required to sit an exam, so a
+bare `python3 cramfest.py` asks for the pool and then sits one.
 
 ## You supply the question pool
 
@@ -243,9 +243,10 @@ hyperlinks. Windows Terminal renders them; the legacy console that `cmd.exe`
 opens on older systems does not, and shows the escape characters as junk around
 the label instead. Everything still runs, but it is unpleasant to read.
 
-Windows ships no `pdftotext`; poppler there is a third-party build, and the
-winget package above puts it on `PATH` where the script looks. Or skip it and
-paste the pool out of your PDF viewer.
+Windows ships no `pdftotext`; poppler there is a third-party build. The
+`Schard.Poppler` winget package puts it on `PATH`, which is where the script
+looks. Or skip it and paste the pool out of your PDF viewer.
 
-Figure links additionally need tesseract. That installer does not always add
-itself to `PATH`, so the script also looks in `C:\Program Files\Tesseract-OCR`.
+Figure links additionally need `UB-Mannheim.TesseractOCR`. That installer does
+not always add itself to `PATH`, so the script also looks in
+`C:\Program Files\Tesseract-OCR`.
