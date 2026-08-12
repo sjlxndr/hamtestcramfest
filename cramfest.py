@@ -356,6 +356,13 @@ def ask(qid, position, total, reference, body, figures):
         print(f"Enter one of {', '.join(VALID)}, or 'q'.")
 
 
+def write_answers(out_path, pool_path, given):
+    with open(out_path, "w", **TEXT) as out:
+        out.write(f"{POOL_HEADER} {pool_name(pool_path)}\n")
+        for qid, answer in given:
+            out.write(f"{qid} {answer}\n")
+
+
 def take_exam(pool, pool_path, out_path, rng, figures):
     exam = build_exam(pool, rng)
     print(f"{len(exam)} questions, one from each group. "
@@ -372,10 +379,7 @@ def take_exam(pool, pool_path, out_path, rng, figures):
             return None
         given.append((qid, answer))
 
-    with open(out_path, "w", **TEXT) as out:
-        out.write(f"{POOL_HEADER} {pool_name(pool_path)}\n")
-        for qid, answer in given:
-            out.write(f"{qid} {answer}\n")
+    write_answers(out_path, pool_path, given)
     return given
 
 
@@ -429,12 +433,29 @@ def explain_link(qid, body):
     return hyperlink(SEARCH_URL + query, "Explain this question")
 
 
-def report(given, pool, figures):
+def missed_in(given, pool):
+    """The questions answered wrongly, refusing answers the pool lacks."""
     unknown = [qid for qid, _ in given if qid not in pool]
     if unknown:
         sys.exit(f"Not in this pool: {', '.join(unknown)}. Wrong pool file?")
+    return [(qid, ans) for qid, ans in given if pool[qid][0] != ans]
 
-    missed = [(qid, ans) for qid, ans in given if pool[qid][0] != ans]
+
+def show_missed(missed, pool, figures):
+    if not missed:
+        print("\nNothing missed.")
+        return
+
+    print(f"\nMissed {len(missed)}:")
+    for qid, ans in missed:
+        answer, _reference, body = pool[qid]
+        print(f"\n[{qid}] you answered {ans}, correct is {answer}")
+        print(with_figures(body, figures))
+        print(explain_link(qid, body))
+
+
+def report(given, pool, figures):
+    missed = missed_in(given, pool)
     total = len(given)
     correct = total - len(missed)
     needed = pass_mark(total)
@@ -450,16 +471,16 @@ def report(given, pool, figures):
         asked = seen[subelement]
         print(f"  {subelement}: {asked - wrong[subelement]}/{asked}")
 
-    if not missed:
-        print("\nNothing missed.")
-        return
+    show_missed(missed, pool, figures)
 
-    print(f"\nMissed {len(missed)}:")
-    for qid, ans in missed:
-        answer, _reference, body = pool[qid]
-        print(f"\n[{qid}] you answered {ans}, correct is {answer}")
-        print(with_figures(body, figures))
-        print(explain_link(qid, body))
+
+def report_drill(given, pool, figures):
+    """No pass mark: 74% is an exam threshold and says nothing here."""
+    missed = missed_in(given, pool)
+    total = len(given)
+    correct = total - len(missed)
+    print(f"\nScore: {correct}/{total} = {100 * correct / total:.1f}%")
+    show_missed(missed, pool, figures)
 
 
 def prompt(label, default=None):
@@ -492,6 +513,10 @@ def parse_args():
     parser.add_argument("--score", help="score this answers file, no exam")
     parser.add_argument("--weak", nargs="+", metavar="FILE",
                         help="report weak areas across these answers files")
+    parser.add_argument("--drill", metavar="AREA",
+                        help="drill a subelement like T8 or a group like T8C")
+    parser.add_argument("--count", type=int, metavar="N",
+                        help="ask at most N of them, if the area holds more")
     args = parser.parse_args()
 
     if args.pool is None:
@@ -562,6 +587,52 @@ def report_weak(paths, pool):
         print(f"Not in this pool, and not counted: {', '.join(seen)}")
 
 
+def drill_questions(pool, area, count, rng):
+    """The questions in a subelement or group, shuffled, optionally fewer.
+
+    A count outside what the area holds asks all of it: nothing sensible
+    is meant by fewer than one, and asking for more than exists is just
+    asking for everything.
+    """
+    area = area.upper()
+    chosen = [qid for qid in pool if qid.startswith(area)]
+    if not chosen:
+        sys.exit(f"No questions in {area}. Give a subelement like T8, "
+                 "or a group like T8C.")
+
+    rng.shuffle(chosen)
+    if count is not None and 1 <= count < len(chosen):
+        chosen = chosen[:count]
+    return chosen
+
+
+def drill_path(pool, area):
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    element = ELEMENTS[next(iter(pool))[0]]
+    return os.path.join(os.getcwd(),
+                        f"{element}_drill_{area.upper()}_{stamp}.txt")
+
+
+def take_drill(pool, pool_path, area, count, rng, figures):
+    questions = drill_questions(pool, area, count, rng)
+    out_path = drill_path(pool, area)
+    print(f"{len(questions)} questions from {area.upper()}.")
+    print(f"Answers are saved to {out_path} when you finish.")
+
+    given = []
+    for position, qid in enumerate(questions, 1):
+        _answer, reference, body = pool[qid]
+        answer = ask(qid, position, len(questions), reference, body, figures)
+        if answer == "Q":
+            print(f"\nAbandoned after {position - 1} of {len(questions)}. "
+                  "Nothing saved.")
+            return None
+        given.append((qid, answer))
+
+    write_answers(out_path, pool_path, given)
+    return given
+
+
 def main():
     # A terminal whose encoding cannot represent the pool's curly quotes
     # would otherwise raise mid-question. Printing them as "?" is worse to
@@ -570,6 +641,15 @@ def main():
         stream.reconfigure(errors="replace")
 
     args = parse_args()
+
+    if args.drill:
+        pool = load_pool(args.pool)
+        figures = load_figures(args.pool)
+        given = take_drill(pool, args.pool, args.drill, args.count,
+                           random.Random(), figures)
+        if given is not None:
+            report_drill(given, pool, figures)
+        return
 
     if args.weak:
         report_weak(args.weak, load_pool(args.pool))
