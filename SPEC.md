@@ -186,14 +186,32 @@ that questions depending on a figure are linked to it when the pool is a PDF and
 tesseract is installed, and that the reader should otherwise keep the pool PDF
 open to consult figures directly.
 
+**Weak areas.** Given a set of answers files, the script reports where study is
+needed, ranked worst first. Subelements are listed with the share answered
+wrongly and the counts behind it, and under each, the groups within it that were
+missed. The counts are shown beside every percentage, so a rate resting on two
+answers is visible as such without needing to be flagged.
+
+A report covers one exam element. Answers files name their element in every
+question ID, so the element is read from the answers rather than asked for, and
+a set spanning more than one is refused rather than combined.
+
+Subelement names come from the pool's own `SUBELEMENT` headings, which sit
+outside the anchored text and are read separately from it. The headings are not
+uniform: subelement 1 of Technician and General reads `COMMISSION’S RULES` with a
+curly apostrophe, General separates its heading with an en-dash where the others
+use a hyphen, and Extra's `SAFETY` heading carries a second hyphen before its
+bracket. A pattern that misses any of these silently drops one subelement's name
+rather than failing.
+
 **Failure.** No user mistake produces a traceback. A pool that does not exist,
 cannot be read, or is a directory; an answers file that is not there; a
 conversion that fails: each prints one line naming the problem and exits
 non-zero.
 
-**Command line.** `--pool` and `--score` as file arguments. A bare run prompts
-for the pool, which is the only thing it cannot derive. No data on stdin or
-stdout.
+**Command line.** `--pool` and `--score` as file arguments, and `--weak` taking
+one or more answers files. A bare run prompts for the pool, which is the only
+thing it cannot derive. No data on stdin or stdout.
 
 ### Acceptance criteria
 
@@ -248,6 +266,15 @@ stdout.
 21. A pool path that does not exist, is unreadable, or is a directory prints
     one line and exits 1. So does a missing answers file. No traceback reaches
     the reader.
+22. A weak-areas report over the three answers files in hand ranks subelements
+    worst first, with the fraction shown beside each percentage, and lists the
+    missed groups beneath each subelement.
+23. Every subelement of every pool is named in the report: ten of ten for
+    Technician, General and Extra, including `COMMISSION’S RULES` and `SAFETY`.
+24. A set of answers files spanning more than one element is refused, naming
+    the elements found.
+25. Questions in an answers file that are absent from the pool are reported
+    rather than counted, so scoring against the wrong release is visible.
 
 ## Out of scope
 
@@ -258,20 +285,23 @@ stdout.
 - Any GUI, web interface, or TUI beyond line-by-line prompts.
 - Resuming an interrupted exam. Quitting discards the attempt, and the answers
   file is deliberately not a checkpoint.
-- Progress tracking across sessions, spaced repetition, or weighting toward
-  previously missed questions.
+- Spaced repetition, or weighting an exam toward previously missed questions.
+  Reading past attempts to say where study is needed is in scope; changing what
+  the next exam asks on that basis is not.
 - Shuffling or renaming answer choices.
 - Validating or correcting the pool beyond parsing it.
 - Reproducing the existing per-subelement study quizzes.
 
 ## Deferred
 
-- Opening the pool PDF to the page holding a referenced figure.
 - A study mode that drills a single subelement rather than a full exam.
 - A seed argument for reproducible exams.
 
 ## Assumptions
 
+- A weak-areas report is read from answers files alone. Nothing is recorded
+  between runs beyond those files, so the set the reader passes is the whole
+  history the report knows about.
 - Figure captions are rendered into the images and are legible to OCR. True of
   all fourteen figures in the three pools in hand: thirteen on the first
   attempt, one on the retry, about two seconds per pool, once, cached after.
