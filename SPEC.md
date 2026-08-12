@@ -188,14 +188,16 @@ open to consult figures directly.
 
 **Weak areas.** Given a set of answers files, the script reports where study is
 needed as three tables: subelements ranked worst first, then the groups missed
-in pool order, then the same groups ranked worst first. The counts are shown
+laid out under that same ranking, then the same groups ranked worst first on
+their own. The counts are shown
 beside every percentage, so a rate resting on two answers is visible as such
 without needing to be flagged.
 
 Groups appear twice because the two orderings answer different questions. Ranked
-says what to study next; pool order says where the gaps fall as the syllabus
-runs, and is how the reader finds a group they already have in mind. Pool order
-closes with subelement 0 rather than opening with it.
+on their own says what to study next. Laid out under the subelement ranking, the
+two tables line up, so the groups that drove a subelement's position sit together
+beneath it and a weak subelement can be read as the handful of groups it is made
+of. Within a subelement the groups run in their own order.
 
 The subelement table lists every subelement seen. The group tables list only
 groups with at least one wrong answer, since a pool has thirty-five or fifty
@@ -273,9 +275,9 @@ thing it cannot derive. No data on stdin or stdout.
     one line and exits 1. So does a missing answers file. No traceback reaches
     the reader.
 22. A weak-areas report prints three tables: subelements ranked worst first,
-    groups in pool order, and groups ranked worst first, each with the fraction
-    beside the percentage. The group tables omit groups answered correctly, and
-    pool order places subelement 0 last.
+    groups ordered by their subelement's rank, and groups ranked worst first,
+    each with the fraction beside the percentage. The group tables omit groups
+    answered correctly.
 23. Questions in an answers file that are absent from the pool are reported
     rather than counted, so scoring against the wrong release is visible.
 

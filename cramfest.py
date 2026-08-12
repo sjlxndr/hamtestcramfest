@@ -522,9 +522,14 @@ def weakest(keys, wrong, asked):
     return sorted(keys, key=lambda k: (-wrong[k] / asked[k], -asked[k], k))
 
 
-def pool_order(keys):
-    """As the pool runs: subelement 0 closes it rather than opening it."""
-    return sorted(keys, key=lambda k: (k[1] == "0", k))
+def under(groups, ranked_subelements):
+    """Groups beneath their subelement, in the subelement ranking's order.
+
+    Lines the group table up with the subelement table above it, so the
+    groups that drove a subelement's rank sit together under it.
+    """
+    rank = {name: place for place, name in enumerate(ranked_subelements)}
+    return sorted(groups, key=lambda g: (rank[g[:2]], g))
 
 
 def report_weak(paths, pool):
@@ -538,9 +543,10 @@ def report_weak(paths, pool):
     subelements = [k for k in asked if len(k) == 2]
     groups = [k for k in asked if len(k) == 3 and wrong[k]]
 
+    ranked = weakest(subelements, wrong, asked)
     for title, ordered in (
-            ("By subelement, weakest first", weakest(subelements, wrong, asked)),
-            ("By group, in pool order", pool_order(groups)),
+            ("By subelement, weakest first", ranked),
+            ("By group, under the subelement ranking", under(groups, ranked)),
             ("By group, weakest first", weakest(groups, wrong, asked)),
     ):
         print(title)

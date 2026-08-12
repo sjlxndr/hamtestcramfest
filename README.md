@@ -189,10 +189,10 @@ By subelement, weakest first
   T9    12.5%   1 of 8 wrong
   ...
 
-By group, in pool order
+By group, under the subelement ranking
   T1A   33.3%   1 of 3 wrong
   T1C   50.0%   1 of 2 wrong
-  T2A   33.3%   1 of 3 wrong
+  T8A  100.0%   1 of 1 wrong
   ...
 
 By group, weakest first
@@ -205,10 +205,10 @@ By group, weakest first
 The counts sit beside every percentage because they matter: `1 of 1 wrong` is
 100% and means almost nothing, while `2 of 13` is a real signal.
 
-The missed groups appear twice on purpose. Ranked tells you what to study next;
-pool order tells you where the gaps fall as the syllabus runs, and is how you
-find a group you already have in mind. Both list only groups you have missed at
-least once.
+The missed groups appear twice on purpose. Ranked on their own tells you what to
+study next. Laid out under the subelement ranking, the two tables line up, so you
+can see which groups made a subelement weak. Both list only groups you have
+missed at least once.
 
 Files are scored against the pool you pass, so anything not in that pool, an
 older release or a different element, is listed as uncounted rather than folded
