@@ -720,7 +720,8 @@ def main():
 
     pool = load_pool(args.pool)
     figures = load_figures(args.pool)
-    given = take_exam(pool, args.pool, session_path(pool, "answers"), random.Random(), figures)
+    given = take_exam(pool, args.pool, session_path(pool, "answers"),
+                      random.Random(), figures)
     if given is not None:
         report(given, pool, figures)
 
