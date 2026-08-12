@@ -3,15 +3,12 @@
 Ham radio license exam practice, driven by an FCC question pool.
 
 Usage:
-    python3 cramfest.py --pool pool.pdf
-    python3 cramfest.py --pool pool.pdf --score technician_answers_....txt
-    python3 cramfest.py                     # prompts for the pool
-
-A finished exam is written to <element>_answers_<timestamp>.txt in the
-working directory, and --score reads one back. Scoring needs the pool the
-exam came from; the filename names the element so you know which one, but
-two releases of the same element are indistinguishable and can hold a
-different correct answer under the same question ID.
+    cramfest.py --pool <pool>                        sit an exam
+    cramfest.py --pool <pool> --score <answers>      score a saved file
+    cramfest.py --pool <pool> --weak <answers>...    rank weak areas
+    cramfest.py --pool <pool> --drill <area>         drill one area
+    cramfest.py --pool <pool> --feedback             study with answers shown
+    cramfest.py                                      prompts for the pool
 
 Give it a question pool released by the NCVEC, as the released PDF or a
 text dump of one, and it builds an exam the way a VEC does: one question
@@ -19,10 +16,18 @@ drawn at random from each subelement group in the pool. Technician has 35
 groups, so a Technician exam is 35 questions. General and Extra work the
 same way with nothing to change here.
 
-Answers are written to a file as you give them, so an interrupted session
-keeps what you already answered and that file can be rescored later.
+A finished exam or drill is written to <element>_<kind>_<timestamp>.txt in
+the working directory, and --score reads one back. Stopping early discards
+it, because finishing is the point; --feedback is the exception, keeping
+what was answered, since it works through the whole pool.
+
+Scoring needs the pool the answers came from. The filename names the
+element, but two releases of the same element are indistinguishable by it
+and can hold a different correct answer under the same question ID, which
+is what the header inside the file is for.
 
 Reading a PDF needs pdftotext, from poppler-utils. A text dump avoids it.
+Linking a question's figure additionally needs tesseract.
 """
 import os
 import re
@@ -368,14 +373,24 @@ def write_answers(out_path, pool_path, given):
             out.write(f"{qid} {answer}\n")
 
 
-def verdict(question, answer):
-    """Right or wrong, and what the answer was, for feedback as you go."""
+def verdict(qid, question, answer):
+    """Right or wrong, what the answer was, and where to read up on it.
+
+    The link is offered either way, unlike a report, which only links what
+    was missed. Here you are studying rather than being marked, and a
+    lucky guess is worth reading about as much as a wrong one.
+    """
     if answer == question.answer:
-        return "  Correct."
-    for line in question.body.split("\n"):
-        if line.startswith(f"{question.answer}."):
-            return f"  Wrong. {line}"
-    return f"  Wrong. The answer is {question.answer}.\n"
+        said = "  Correct."
+    else:
+        named = f"The answer is {question.answer}."
+        for line in question.body.split("\n"):
+            if line.startswith(f"{question.answer}."):
+                named = line
+                break
+        said = f"  Incorrect. {named}"
+
+    return f"{said}\n  {explain_link(qid, question.body)}"
 
 
 def administer(pool, pool_path, questions, out_path, figures, feedback=False):
@@ -400,7 +415,7 @@ def administer(pool, pool_path, questions, out_path, figures, feedback=False):
             break
         given.append((qid, answer))
         if feedback:
-            print(verdict(question, answer))
+            print(verdict(qid, question, answer))
 
     if given:
         write_answers(out_path, pool_path, given)
