@@ -346,7 +346,58 @@ thing it cannot derive. No data on stdin or stdout.
 
 ## Deferred
 
-Nothing.
+### A browser front end
+
+Designed, not built. A desktop utility that renders in a browser rather than a
+server: one user, one process, bound to the loopback address, launched with its
+own tab. The command line stays, and the two share one core.
+
+**The prerequisite is separating computation from rendering.** `report`,
+`report_drill`, `report_weak` and `show_missed` print as they compute, so
+nothing else can consume their numbers. They need to return what they worked
+out and let each front end display it. `administer` needs the same treatment in
+a different form: split into "what is the next question" and "record this
+answer", which is the state a request-response front end needs and a loop can
+still drive. This is the critical path, and it is worth doing on its own merits
+regardless.
+
+**Everything else ports as it stands.** The parser, exam construction, drilling,
+scoring and the weak-area analysis are already data in, data out. The figure
+pipeline moves to import time, where paying a few seconds once is better than
+stalling someone's first exam.
+
+**Files are addressed by index, never by path.** The utility lists its own
+directories by glob, and the browser refers to a row by its position in that
+listing. A filename never travels in a request, so a request cannot name a file
+the utility did not offer, and traversal is unrepresentable rather than guarded
+against.
+
+**Uploading a pool needs `email.parser`, not `cgi`.** `cgi.FieldStorage` was the
+usual way to read a multipart upload under `http.server` and was removed from
+the standard library in 3.13. `email.parser.BytesParser` on the body with a
+synthesised `Content-Type` header does the same job in about fifteen lines,
+verified against a real 480 KB pool arriving byte-identical. Validation is
+already written: `load_pool` refuses anything that is not a question pool.
+
+**Layout.** Pools and answers each get a directory, and answers are filed by
+element:
+
+    pools/
+    answers/technician/
+    answers/general/
+    answers/extra/
+
+The element then leaves the filename, which carried it only so a shell glob
+could separate one element from another, and `--weak` can default to the
+directory belonging to the pool it was given rather than requiring a glob at
+all. Moving to this layout leaves any existing answers file where the tool will
+no longer look, so it wants doing deliberately rather than silently.
+
+Two questions left open. Whether `--pool` stays a path or becomes a name
+resolved against `pools/`, which is nicer to type and is what a picker implies,
+but stops the command line pointing at a pool held anywhere else. And whether
+closing the tab should stop the utility, which is convenient until someone
+closes it by accident.
 
 ## Assumptions
 
