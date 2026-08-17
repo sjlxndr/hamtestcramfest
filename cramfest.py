@@ -482,7 +482,7 @@ def explain_link(qid, body):
     engine matches worst; the pages the ID finds carry all four.
     """
     query = urllib.parse.quote_plus(
-        f"Explain this ham radio question, and why each of the other answer "
+        "Explain this ham radio question, and why each of the other answer "
         f"choices is wrong: {qid} {asked(body)}")
     return hyperlink(SEARCH_URL + query, "Explain this question")
 

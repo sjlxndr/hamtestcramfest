@@ -342,10 +342,11 @@ Buttons stand in for the flags:
 | Score a saved answers file | `--score <answers>` |
 | Weak areas from answers files | `--weak <answers>...` |
 
-The pool it is working from is named across the top: the exam and the release,
-read out of the pool's own front matter, as in `General, effective 7/01/2023 –
-6/30/2027`. That is what tells one release of an element from the next; the
-filename is what the answers files record.
+The pool it is working from is named in bold on its own line, under the question
+pool box on the menu and under the title everywhere else: the exam and the
+release, read out of the pool's own front matter, as in `General, effective
+7/01/2023 – 6/30/2027`. That is what tells one release of an element from the
+next; the filename is what the answers files record.
 
 **Area** is a menu of what the pool holds rather than something to type: the
 whole pool, each subelement, and each group beneath it. A drill wants one of
