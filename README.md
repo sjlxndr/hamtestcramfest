@@ -21,6 +21,7 @@ python3 cramfest.py --pool <pool>
 - [Drilling one area](#drilling-one-area)
 - [Learning as you go](#learning-as-you-go)
 - [Diagrams](#diagrams)
+- [In a browser](#in-a-browser)
 - [On Windows](#on-windows)
 - [License](#license)
 
@@ -299,6 +300,36 @@ Refer to PDF for Figure T-1
 
 so keep the pool PDF on hand either way. Figures are extracted once and cached
 beside the pool, or in a temporary directory if that is not writable.
+
+## In a browser
+
+`cramfest.html` is the same tool with buttons instead of flags. Open the file and
+pick your pool; everything else is the same exam, the same drills, the same
+scoring. It is one file, so save it wherever you like and open it from there.
+
+Nothing installs and nothing runs on a server. The pool is read inside the page,
+and the answers files it saves are the ones `cramfest.py` reads, so you can take
+an exam in the browser and score it at the command line or the other way round.
+
+There is no `pdftotext` and no tesseract to install: the page reads the PDF and
+its figures itself, fetching the two libraries that do that from a CDN the first
+time it needs them. That is the only thing it wants a network for, and only for a
+PDF. Hand it a text dump of the pool instead and it fetches nothing at all: every
+mode runs offline, without the figures, exactly as a text pool does at the
+command line.
+
+Buttons stand in for the flags:
+
+| Button | The flag it replaces |
+|---|---|
+| Take an exam | the bare `--pool` run |
+| Drill an area | `--drill <area>`, with **Area** and **Count** |
+| Study with answers | `--feedback`, taking the same two |
+| Score a saved answers file | `--score <answers>` |
+| Weak areas from answers files | `--weak <answers>...` |
+
+**Theme** follows whatever your system is set to. The button cycles it through
+light and dark and back to following the system, and remembers which you chose.
 
 ## On Windows
 
