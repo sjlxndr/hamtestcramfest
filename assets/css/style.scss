@@ -1,0 +1,65 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+/* The theme this imports is light only: it carries no prefers-color-scheme
+   rule at all, so a reader whose system is set to dark got a white page.
+   What follows repaints it, using the same palette as cramfest.html so the
+   landing page and the tool look like one thing.
+
+   Every selector below is one the theme already sets a color on, repeated
+   here so it wins on source order rather than on specificity. */
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #e6e8ec;
+    background-color: #14161a;
+  }
+
+  .markdown-body a {
+    color: #6fa8ff;
+  }
+
+  .markdown-body h1,
+  .markdown-body h2 {
+    border-bottom-color: #343943;
+  }
+
+  .markdown-body code,
+  .markdown-body tt {
+    background-color: rgba(230, 232, 236, 0.08);
+  }
+
+  .markdown-body .highlight pre,
+  .markdown-body pre {
+    color: #e6e8ec;
+    background-color: #1e2127;
+  }
+
+  .markdown-body table th,
+  .markdown-body table td {
+    border-color: #343943;
+  }
+
+  .markdown-body table tr {
+    background-color: #14161a;
+    border-top-color: #343943;
+  }
+
+  .markdown-body table tr:nth-child(2n) {
+    background-color: #1e2127;
+  }
+
+  .markdown-body blockquote {
+    color: #9aa1ad;
+    border-left-color: #343943;
+  }
+
+  .markdown-body hr {
+    background-color: #343943;
+  }
+
+  .markdown-body img {
+    background-color: transparent;
+  }
+}
