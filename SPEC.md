@@ -1,9 +1,19 @@
 # Single-script exam tool
 
+## Status
+
+**This describes `cramfest.py`, and only `cramfest.py`.** It is the behavior
+agreed before that script was written.
+
+`cramfest.html`, the browser front end, is not covered here. It was built from
+the working script rather than specified in advance, and `README.md` is where
+its behavior is written down. Where this document and the shipped tools
+disagree, the tools are right.
+
 ## Audience and purpose
 
-Stephen reads this to approve the behavior before any test or line of code is
-written. The implementer derives tests from **In scope** and nothing else.
+This states the behavior to be agreed before any test or line of code is
+written. Tests derive from **In scope** and nothing else.
 
 ## Background
 
@@ -208,7 +218,13 @@ apart lets the reader choose which to include when reporting weak areas.
 **Feedback.** `--feedback` works through the pool a question at a time, saying
 after each whether the answer was right and, when it was not, what the answer
 was. It takes `--drill` and `--count` to narrow what it asks; on its own it asks
-the whole pool, shuffled, rather than an exam's worth.
+the whole pool rather than an exam's worth.
+
+Before the first question it asks whether to work through the area in pool order
+or shuffled, defaulting to shuffled, which is what every other mode does. Pool
+order reads better in an area met for the first time, since the pool groups
+related questions together; a drill and an exam are never asked and stay
+shuffled, so a repeated one does not rehearse a sequence.
 
 It is not scored. The feedback as you go is the point, so there is no tally, no
 pass mark and no list of what was missed at the end.
@@ -310,9 +326,11 @@ thing it cannot derive. No data on stdin or stdout.
     groups ordered by their subelement's rank, and groups ranked worst first,
     each with the fraction beside the percentage. The group tables omit groups
     answered correctly.
-22a. `--feedback` asks the whole pool in a random order, says whether each
-    answer was right and names the right one when it was not, and prints no
-    score, pass mark or missed list.
+22a. `--feedback` asks the whole pool, says whether each answer was right and
+    names the right one when it was not, and prints no score, pass mark or
+    missed list. It asks first whether to order the questions by the pool or
+    shuffle them, takes shuffled on an empty answer, and refuses anything that
+    is neither.
 22b. `--feedback` with `--drill` or `--count` asks only what those select.
 22c. A feedback session writes no file, whether it is stopped early or run to
     the end.
@@ -334,7 +352,9 @@ thing it cannot derive. No data on stdin or stdout.
   each terminal-specific, detection is unreliable, and Windows terminals
   largely support none of them. The figure is offered as a link and opened by
   whatever the reader already uses for images.
-- Any GUI, web interface, or TUI beyond line-by-line prompts.
+- Any GUI or TUI in `cramfest.py` beyond line-by-line prompts. The browser
+  front end, `cramfest.html`, is a separate program sharing no code with the
+  script, and sits outside this document rather than inside its scope.
 - Resuming an interrupted exam. Quitting discards the attempt, and the answers
   file is deliberately not a checkpoint.
 - Spaced repetition, or weighting an exam toward previously missed questions.
@@ -387,7 +407,7 @@ Nothing.
   whose headers are damaged past recognition parses short and says nothing. This
   is accepted deliberately: the tool is for complete pools, and terminator
   counting was scaffolding for a parser that lost questions on ordinary input.
-- `.gitignore` needs explicit `!/SPEC.md` and `!/README.md` negations, because
-  its deny-all whitelist would otherwise refuse both files. `!/*.md` is not
-  used, as it would re-admit the personal study records the whitelist exists to
-  exclude.
+- `.gitignore` needs an explicit negation for every tracked file that is not a
+  `.py`, because its deny-all whitelist would otherwise refuse it. `!/*.md` is
+  not used, as it would re-admit the personal study records the whitelist
+  exists to exclude.
