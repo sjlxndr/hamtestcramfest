@@ -120,6 +120,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
   Nothing is uploaded anywhere; the file is read in this page.</p>
   <div class="row">
     <input type="file" id="pool-file" accept=".pdf,.txt,text/plain,application/pdf">
+    <button id="pool-forget" class="hidden">Forget the kept pool</button>
   </div>
   <p id="pool-status" class="muted"></p>
 </section>
@@ -162,7 +163,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
   <div id="report-body"></div>
   <div class="row" style="margin-top:1rem">
     <button id="report-save" class="hidden">Save answers file</button>
-    <button id="report-back">Back</button>
+    <button id="report-back">Back to what now</button>
   </div>
 </section>
 
@@ -688,6 +689,71 @@ async function readPool(file, note) {
   return { text, doc };
 }
 
+/* --------------------------------------------------------- keeping it ---- */
+
+// A pool costs a few seconds to read and its figures a couple more, so it is
+// kept and offered back on the next visit. The database holds one record,
+// replaced whenever another pool is opened. Answers are deliberately not
+// here: a finished session leaves a file, and an unfinished one is discarded.
+const KEPT = "cramfest";
+const KEPT_POOLS = "pools";
+const KEPT_CURRENT = "current";
+
+function database() {
+  return new Promise((resolve, reject) => {
+    const opening = indexedDB.open(KEPT, 1);
+    opening.onupgradeneeded = () => opening.result.createObjectStore(KEPT_POOLS);
+    opening.onsuccess = () => resolve(opening.result);
+    opening.onerror = () => reject(opening.error);
+  });
+}
+
+function inside(db, mode, work) {
+  return new Promise((resolve, reject) => {
+    const deal = db.transaction(KEPT_POOLS, mode);
+    const asked = work(deal.objectStore(KEPT_POOLS));
+    deal.oncomplete = () => resolve(asked && asked.result);
+    deal.onerror = () => reject(deal.error);
+    deal.onabort = () => reject(deal.error);
+  });
+}
+
+/* Put this pool where the next visit will find it, or say why not.
+
+   Figures are stored as the images themselves rather than as the addresses
+   they are shown under, because those addresses die with the page. */
+async function keep(pool, name, figures) {
+  const images = [];
+  for (const [label, url] of figures) images.push([label, await (await fetch(url)).blob()]);
+
+  const db = await database();
+  try {
+    await inside(db, "readwrite", (store) =>
+      store.put({ name, questions: [...pool.entries()], figures: images }, KEPT_CURRENT));
+  } finally {
+    db.close();
+  }
+  return true;
+}
+
+async function kept() {
+  const db = await database();
+  try {
+    return await inside(db, "readonly", (store) => store.get(KEPT_CURRENT));
+  } finally {
+    db.close();
+  }
+}
+
+async function forget() {
+  const db = await database();
+  try {
+    await inside(db, "readwrite", (store) => store.delete(KEPT_CURRENT));
+  } finally {
+    db.close();
+  }
+}
+
 /* ---------------------------------------------------------------- view ---- */
 
 const state = {
@@ -800,7 +866,7 @@ function tableNode(headings, rows) {
 }
 
 function screen(name) {
-  show("setup", name === "modes");
+  show("setup", name === "setup" || name === "modes");
   show("modes", name === "modes");
   show("quiz", name === "quiz");
   show("report", name === "report");
@@ -814,6 +880,9 @@ function startSession({ questions, kind, feedback, intro, saveAs, report }) {
     at: 0, given: [], stopped: false,
   };
   el("quiz-intro").textContent = intro;
+  // Leaving a run that would have saved something is an abandonment, and
+  // says so on the way out. Leaving one that never would is just leaving.
+  el("quiz-stop").textContent = saveAs ? "Stop" : "Back to what now";
   screen("quiz");
   showQuestion();
 }
@@ -904,12 +973,20 @@ function finish() {
 
 function stop() {
   const session = state.session;
+  state.saved = null;
+  show("report-save", false);
+
+  // Nothing was going to be written, so there is nothing to report having
+  // discarded, and the way out is the way back.
+  if (!session.saveAs) {
+    screen("modes");
+    return;
+  }
+
   const body = el("report-body");
   body.replaceChildren();
   body.append(text("h2", `Stopped after ${session.at} of ${session.questions.length}.`));
-  if (session.saveAs) body.append(text("p", "Nothing saved.", "muted"));
-  state.saved = null;
-  show("report-save", false);
+  body.append(text("p", "Nothing saved.", "muted"));
   screen("report");
 }
 
@@ -1017,6 +1094,23 @@ function areaAndCount() {
   return { area, count: raw === "" ? null : Number(raw) };
 }
 
+/* Take up a pool that has been read, whether just now or last time. */
+function poolReady(pool, name, figures, note, ending) {
+  state.pool = pool;
+  state.poolName = name;
+  state.figures = figures;
+
+  const groups = new Set([...pool.keys()].map((qid) => qid.slice(0, 3)));
+  note(`${pool.size} questions in ${groups.size} groups. ` +
+    `An exam is ${groups.size} questions, ${passMark(groups.size)} to pass. ` +
+    (figures.size ? `${figures.size} figure(s). ` : "No figures; questions will name them instead. ") +
+    ending);
+  el("pool-label").textContent = `${poolElement(pool)}: ${name}`;
+  const element = pool.keys().next().value[0];
+  el("area").placeholder = `${element}8 or ${element}8C`;
+  screen("modes");
+}
+
 el("pool-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -1043,20 +1137,13 @@ el("pool-file").addEventListener("change", async (event) => {
       }
     }
 
-    state.pool = pool;
-    state.poolName = file.name;
-    state.figures = figures;
+    note("Keeping the pool for next time...");
+    const held = await keep(pool, file.name, figures).catch((problem) => problem.message);
 
-    const groups = new Set([...pool.keys()].map((qid) => qid.slice(0, 3)));
-    note(`${pool.size} questions in ${groups.size} groups. ` +
-      `An exam is ${groups.size} questions, ${passMark(groups.size)} to pass. ` +
-      (figures.size
-        ? `${figures.size} figure(s) read.`
-        : `No figures${trouble}; questions will name them instead.`));
-    el("pool-label").textContent = `${poolElement(pool)}: ${file.name}`;
-    const element = pool.keys().next().value[0];
-    el("area").placeholder = `${element}8 or ${element}8C`;
-    screen("modes");
+    poolReady(pool, file.name, figures, note,
+      (trouble ? `Figures unavailable${trouble}. ` : "") +
+      (held === true ? "Kept for next time." : `Not kept for next time (${held}).`));
+    show("pool-forget", held === true);
   } catch (problem) {
     state.pool = null;
     status.className = "err";
@@ -1170,6 +1257,30 @@ el("theme-toggle").addEventListener("click", () => {
 });
 
 applyTheme(localStorage.getItem("cramfest-theme") || "system");
+
+/* ------------------------------------------------------- last time's ---- */
+
+el("pool-forget").addEventListener("click", async () => {
+  await forget();
+  state.pool = null;
+  state.figures = new Map();
+  state.poolName = "";
+  el("pool-label").textContent = "";
+  el("pool-status").textContent = "Forgotten. Open a pool to start again.";
+  el("pool-file").value = "";
+  show("pool-forget", false);
+  screen("setup");
+});
+
+// A browser that will not keep anything still runs the whole tool; it just
+// reads the pool afresh each visit.
+kept().then((record) => {
+  if (!record) return;
+  const figures = new Map(record.figures.map(([label, image]) => [label, URL.createObjectURL(image)]));
+  poolReady(new Map(record.questions), record.name, figures,
+    (message) => { el("pool-status").textContent = message; }, "Kept from last time.");
+  show("pool-forget", true);
+}).catch(() => {});
 
 /* Reached from the page's own console, and by the tests. */
 window.cramfest = {

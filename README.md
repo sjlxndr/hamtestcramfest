@@ -311,6 +311,12 @@ Nothing installs and nothing runs on a server. The pool is read inside the page,
 and the answers files it saves are the ones `cramfest.py` reads, so you can take
 an exam in the browser and score it at the command line or the other way round.
 
+The pool is kept once read, figures included, so a refresh brings it straight
+back instead of reading it again. Opening another pool replaces it, and **Forget
+the kept pool** clears it. Answers are deliberately not kept that way: a finished
+exam leaves a file, and an unfinished one is discarded, exactly as at the command
+line.
+
 There is no `pdftotext` and no tesseract to install: the page reads the PDF and
 its figures itself, fetching the two libraries that do that from a CDN the first
 time it needs them. That is the only thing it wants a network for, and only for a
