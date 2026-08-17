@@ -874,11 +874,8 @@ function screen(name) {
 
 /* -------------------------------------------------------------- a quiz ---- */
 
-function startSession({ questions, kind, feedback, intro, saveAs, report }) {
-  state.session = {
-    questions, kind, feedback, report, saveAs,
-    at: 0, given: [], stopped: false,
-  };
+function startSession({ questions, feedback, intro, saveAs, report }) {
+  state.session = { questions, feedback, report, saveAs, at: 0, given: [] };
   el("quiz-intro").textContent = intro;
   // Leaving a run that would have saved something is an abandonment, and
   // says so on the way out. Leaving one that never would is just leaving.
@@ -1156,7 +1153,6 @@ el("start-exam").addEventListener("click", guard(() => {
   const exam = buildExam(state.pool);
   startSession({
     questions: exam,
-    kind: "exam",
     feedback: false,
     intro: `${exam.length} questions, one from each group. ${passMark(exam.length)} correct to pass.`,
     saveAs: sessionName(state.pool, "answers"),
@@ -1170,7 +1166,6 @@ el("start-drill").addEventListener("click", guard(() => {
   const questions = drillQuestions(state.pool, area, count);
   startSession({
     questions,
-    kind: "drill",
     feedback: false,
     intro: `${questions.length} questions from ${area.toUpperCase()}.`,
     saveAs: sessionName(state.pool, `drill_${area.toUpperCase()}`),
@@ -1183,7 +1178,6 @@ el("start-feedback").addEventListener("click", guard(() => {
   const questions = drillQuestions(state.pool, area, count);
   startSession({
     questions,
-    kind: "study",
     feedback: true,
     intro: `${questions.length} questions${area ? ` from ${area.toUpperCase()}` : ""}, with the answer after each.`,
     saveAs: null,
