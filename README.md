@@ -183,14 +183,16 @@ If tesseract was installed somewhere other than `PATH`, the script also looks in
 
 ## The question pool
 
-The questions are not included here. You download the pool the FCC's question
+The questions are not included here. You download the pool the NCVEC's question
 pool committee publishes, and everything else is read out of it: which element
 you are studying, how long an exam is, and what it takes to pass.
 
-- **In a browser**, click **Open a pool file** and choose the file. The pool is
-  named across the page once it is read, giving the element and the release, as
-  in `General, effective 7/01/2023 – 6/30/2027`, taken from the pool's own front
-  matter rather than from a filename that may have been renamed.
+- **In a browser**, click **Open a pool file** and choose the file. Once it is
+  read, the pool is named in bold on its own line, under the question pool box
+  on the menu and under the title everywhere else, giving the element and the
+  release as in `General, effective 7/01/2023 – 6/30/2027`. That is taken from
+  the pool's own front matter rather than from a filename that may have been
+  renamed.
 - **At the command line**, pass it with `--pool`. A bare run with no flags asks
   for it, since it is the one thing the script cannot work out for itself.
 
