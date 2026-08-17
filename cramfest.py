@@ -18,8 +18,9 @@ same way with nothing to change here.
 
 A finished exam or drill is written to <element>_<kind>_<timestamp>.txt in
 the working directory, and --score reads one back. Stopping early discards
-it, because finishing is the point; --feedback is the exception, keeping
-what was answered, since it works through the whole pool.
+it, because finishing is the point. --feedback writes nothing either way:
+the answer after each question is the whole output, so there is none left
+to report afterward.
 
 Scoring needs the pool the answers came from. The filename names the
 element, but two releases of the same element are indistinguishable by it
@@ -644,8 +645,14 @@ def report_weak(paths, pool):
         print(f"Not in this pool, and not counted: {', '.join(seen)}")
 
 
-def drill_questions(pool, area, count, rng):
-    """The questions in a subelement or group, shuffled, optionally fewer.
+def drill_questions(pool, area, count, rng, ordered):
+    """The questions in a subelement or group, optionally fewer.
+
+    Shuffled unless asked for in order, which only studying asks for:
+    working through an area the way the pool lays it out puts related
+    questions next to each other, and the pool groups them that way on
+    purpose. A drill stays shuffled, so a repeated one does not rehearse a
+    sequence.
 
     A count outside what the area holds asks all of it: nothing sensible
     is meant by fewer than one, and asking for more than exists is just
@@ -657,10 +664,29 @@ def drill_questions(pool, area, count, rng):
         sys.exit(f"No questions in {area}. Give a subelement like T8, "
                  "or a group like T8C.")
 
-    rng.shuffle(chosen)
+    if not ordered:
+        rng.shuffle(chosen)
     if count is not None and 1 <= count < len(chosen):
         chosen = chosen[:count]
     return chosen
+
+
+def ask_order():
+    """Whether to work through the area in pool order, or shuffled.
+
+    Asked when the session starts rather than taken as a flag, because it
+    is a choice about how to read rather than about what to ask, and which
+    way is wanted depends on the area you are about to meet. Shuffled is
+    the default, being what every other mode does.
+    """
+    while True:
+        said = input("Ask them in (p)ool order, or (s)huffled? [s]: ")
+        said = said.strip().lower()
+        if said in ("", "s", "shuffled"):
+            return False
+        if said in ("p", "pool", "pool order"):
+            return True
+        print("Enter p or s.")
 
 
 def study(pool, pool_path, area, count, rng, figures):
@@ -669,14 +695,16 @@ def study(pool, pool_path, area, count, rng, figures):
     Nothing is scored and nothing is written: the verdict after each
     question is the whole output.
     """
-    questions = drill_questions(pool, area, count, rng)
+    ordered = ask_order()
+    questions = drill_questions(pool, area, count, rng, ordered)
     where = f" from {area.upper()}" if area else ""
-    print(f"{len(questions)} questions{where}, with the answer after each.")
+    how = "in pool order" if ordered else "shuffled"
+    print(f"{len(questions)} questions{where}, {how}, with the answer after each.")
     administer(pool, pool_path, questions, None, figures, feedback=True)
 
 
 def take_drill(pool, pool_path, area, count, rng, figures):
-    questions = drill_questions(pool, area, count, rng)
+    questions = drill_questions(pool, area, count, rng, ordered=False)
     out_path = session_path(pool, f"drill_{area.upper()}")
     print(f"{len(questions)} questions from {area.upper()}.")
     print(f"Answers are saved to {out_path} when you finish.")

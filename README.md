@@ -105,13 +105,14 @@ next; the filename is what the answers files record.
 whole pool, each subelement, and each group beneath it. A drill wants one of
 them chosen, and refuses the whole pool, exactly as `--drill` wants an area.
 
-Studying has two things the command line has no place for. **In pool order**
-works through an area the way the pool lays it out instead of shuffled, which
-reads better in an area you are meeting for the first time. And beside each
-question is a **Skip to** menu that moves to another subelement or group without
-going back for it, along with the same order switch, because the reason to
-change it usually arrives once you are already reading. An exam and a drill stay
-shuffled whatever the switch says.
+Studying gets two extras. **In pool order** works through an area the way the
+pool lays it out instead of shuffled, which reads better in an area you are
+meeting for the first time; the command line asks the same question when a
+`--feedback` session starts. And beside each question is a **Skip to** menu that
+moves to another subelement or group without going back for it, along with the
+same order switch, because the reason to change either usually arrives once you
+are already reading. That one has no command line equivalent, there being no
+menu to sit beside. An exam and a drill stay shuffled whatever the switch says.
 
 **Theme** follows whatever your system is set to. The button cycles it through
 light and dark and back to following the system, and remembers which you chose.
@@ -345,14 +346,27 @@ Every question gets the **Explain this question** link, right or wrong — unlik
 the end-of-exam report, which links only what you missed. Here you are studying,
 and a lucky guess is worth reading about too.
 
-On its own it works through the **whole pool** shuffled, not an exam's 35, so it
-is something to dip into rather than finish. Narrow it the same way you narrow a
+On its own it works through the **whole pool**, not an exam's 35, so it is
+something to dip into rather than finish. Narrow it the same way you narrow a
 drill:
 
 ```
 python3 cramfest.py --pool pool.pdf --feedback --drill T8C
 python3 cramfest.py --pool pool.pdf --feedback --drill T8 --count 20
 ```
+
+It asks how to order what it is about to ask, before the first question:
+
+```
+Ask them in (p)ool order, or (s)huffled? [s]:
+```
+
+Shuffled is the default and is what every other mode does. Pool order works
+through the area the way the pool lays it out, which reads better in an area you
+are meeting for the first time, since the pool groups related questions together
+on purpose. It is asked rather than given as a flag because which one you want
+depends on the area you are about to meet. A drill and an exam are not asked and
+stay shuffled, so a repeated one does not rehearse a sequence.
 
 Press `q` to stop whenever you like. Nothing is scored and **nothing is
 written** — no tally, no pass mark, no answers file. You saw each answer as you
