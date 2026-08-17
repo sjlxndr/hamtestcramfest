@@ -6,122 +6,102 @@ Coordinator does: one question drawn at random from each subelement group.
 
 ## Start here
 
-Nothing to install, no account, no sign-up. Two steps.
+Get a question pool, then run it either way. No account, no sign-up.
 
 **1. Get a question pool.** The questions are published free by the NCVEC. On
 [their question pool page][pools], open the one for the license you are studying
 for and download the pool PDF: the file named as the pool and syllabus, not the
 separate diagrams or errata file.
 
-**2. [Run it in your browser][run].** Click **Open a pool file**, choose the PDF
-you just downloaded, wait a few seconds while it reads, and take an exam.
+**2a. [Run it in your browser][run].** Nothing to install. Click **Open a pool
+file**, choose the PDF you just downloaded, wait a few seconds while it reads,
+and take an exam.
 
-Nothing you do leaves your machine. Your pool is read inside the page rather
-than sent anywhere, and your answers are saved to your own downloads folder.
+To keep your own copy of the page, open [cramfest.html][file] and click the
+button just above the file labeled **Download raw file**. Save it anywhere and
+double-click it whenever you want it; it is one file and it works the same way.
 
-**To keep your own copy**, open [cramfest.html][file] and click the button just
-above the file labeled **Download raw file**. Save it anywhere and double-click
-it whenever you want it; it is one file and it works the same way.
+**2b. Or run it in Python.** Download [cramfest.py][script] the same way, and
+point it at the pool:
 
-[In a browser](#in-a-browser) is the rest of what that page does. There is also
-a command line version of the same tool, `cramfest.py`, written up separately
-under [At the command line](#at-the-command-line).
+```
+python3 cramfest.py --pool <the file you downloaded>
+```
+
+A PDF also needs `pdftotext` installed, which
+[At the command line](#at-the-command-line) covers, along with what to do on
+Windows. Nothing else is required.
+
+Either way, nothing you do leaves your machine. Your pool is read where you
+opened it rather than sent anywhere, and your answers are saved on your own
+disk: the browser's downloads folder, or the directory you ran the script from.
 
 [run]: https://sjlxndr.github.io/hamtestcramfest/cramfest.html
 [file]: https://github.com/sjlxndr/hamtestcramfest/blob/main/cramfest.html
+[script]: https://github.com/sjlxndr/hamtestcramfest/blob/main/cramfest.py
 [pools]: https://www.ncvec.org/index.php/amateur-question-pools
 
 ## Contents
+
+There are two ways to run it, and they do the same things. The first two
+sections are how to get each one going; everything after that is what the tool
+does, with a line for each way of asking.
 
 - [Start here](#start-here)
 - [In a browser](#in-a-browser)
 - [At the command line](#at-the-command-line)
   - [Synopsis](#synopsis)
-  - [You supply the question pool](#you-supply-the-question-pool)
   - [Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext)
-  - [Taking an exam](#taking-an-exam)
-  - [Scoring a saved file](#scoring-a-saved-file)
-  - [Where you need to study](#where-you-need-to-study)
-  - [Drilling one area](#drilling-one-area)
-  - [Learning as you go](#learning-as-you-go)
-  - [Diagrams](#diagrams)
   - [On Windows](#on-windows)
+- [The question pool](#the-question-pool)
+- [Taking an exam](#taking-an-exam)
+- [Scoring a saved file](#scoring-a-saved-file)
+- [Where you need to study](#where-you-need-to-study)
+- [Drilling one area](#drilling-one-area)
+- [Learning as you go](#learning-as-you-go)
+- [Diagrams](#diagrams)
 - [License](#license)
 
 ## In a browser
 
-`cramfest.html` is the whole tool as one web page, driven by buttons: the exam,
-the drills, the studying, the scoring and the weak-area tables. Open it and pick
-your pool.
+`cramfest.html` is the whole tool as one web page, driven by buttons. Open it
+and pick your pool.
 
-It runs two ways, and they behave alike. [Hosted][run], nothing is downloaded at
-all, and the PDF is read on a background thread so the page stays responsive
-while it works. Saved to your own disk, it is one self-contained file that opens
+The page itself can be used hosted or saved, and the two behave alike.
+[Hosted][run], nothing is downloaded at all, and the PDF is read on a background
+thread so the page stays responsive while it works. Saved to your own disk, it is one self-contained file that opens
 by double-clicking and does the same reading on the thread that draws the page.
 A pool takes the same few seconds to read either way.
 
 Nothing installs, and nothing of this runs on a server: hosted or saved, the page
-is a static file and the work happens in your own browser. The pool is read
-inside the page, and the answers files it saves are the ones `cramfest.py` reads,
-so you can take an exam in the browser and score it at the command line or the
-other way round.
+is a static file and the work happens in your own browser. There is no
+`pdftotext` and no tesseract to install either. The page reads the PDF and its
+figures itself, fetching the two libraries that do that from a CDN the first time
+it needs them, which is the only thing it wants a network for, and only for a
+PDF. Hand it a text dump of the pool instead and it fetches nothing at all:
+every mode then runs offline, without the figures, exactly as a text pool does
+at the command line.
 
-The pool is kept once read, figures included, so a refresh brings it straight
-back instead of reading it again. Opening another pool replaces it, and **Forget
-the kept pool** clears it. Answers are deliberately not kept that way: a finished
-exam leaves a file, and an unfinished one is discarded, exactly as at the command
-line.
+The answers files it saves are the ones `cramfest.py` reads, so you can take an
+exam in the browser and score it at the command line, or the other way round.
 
-Because of that, the browser's own Back button walks back through the app rather
-than out of it: out of a question to the **Menu**, out of a report to the same
-place. Backing out of an exam abandons it and says so, the way pressing `q` does
-at the command line. Anything that would actually leave the page mid-exam, a
-refresh or closing the tab, asks first.
+Three things belong to the page rather than to the tool:
 
-There is no `pdftotext` and no tesseract to install: the page reads the PDF and
-its figures itself, fetching the two libraries that do that from a CDN the first
-time it needs them. That is the only thing it wants a network for, and only for a
-PDF. Hand it a text dump of the pool instead and it fetches nothing at all: every
-mode runs offline, without the figures, exactly as a text pool does at the
-command line.
-
-Buttons stand in for the flags:
-
-| Button | The flag it replaces |
-|---|---|
-| Take an exam | the bare `--pool` run |
-| Drill an area | `--drill <area>`, with **Area** and **Count** |
-| Study with answers | `--feedback`, taking the same two |
-| Score a saved answers file | `--score <answers>` |
-| Weak areas from answers files | `--weak <answers>...` |
-
-The pool it is working from is named in bold on its own line, under the question
-pool box on the menu and under the title everywhere else: the exam and the
-release, read out of the pool's own front matter, as in `General, effective
-7/01/2023 – 6/30/2027`. That is what tells one release of an element from the
-next; the filename is what the answers files record.
-
-**Area** is a menu of what the pool holds rather than something to type: the
-whole pool, each subelement, and each group beneath it. A drill wants one of
-them chosen, and refuses the whole pool, exactly as `--drill` wants an area.
-
-Studying gets two extras. **In pool order** works through an area the way the
-pool lays it out instead of shuffled, which reads better in an area you are
-meeting for the first time; the command line asks the same question when a
-`--feedback` session starts. And beside each question is a **Skip to** menu that
-moves to another subelement or group without going back for it, along with the
-same order switch, because the reason to change either usually arrives once you
-are already reading. That one has no command line equivalent, there being no
-menu to sit beside. An exam and a drill stay shuffled whatever the switch says.
-
-**Theme** follows whatever your system is set to. The button cycles it through
-light and dark and back to following the system, and remembers which you chose.
+- **The pool is kept once read**, figures included, so a refresh brings it
+  straight back instead of reading it again. Opening another pool replaces it,
+  and **Forget the kept pool** clears it. Answers are deliberately not kept that
+  way: a finished exam leaves a file, and an unfinished one is discarded.
+- **The browser's own Back button walks back through the page** rather than out
+  of it: out of a question to the **Menu**, out of a report to the same place.
+  Backing out of an exam abandons it and says so. Anything that would really
+  leave the page mid-exam, a refresh or closing the tab, asks first.
+- **Theme** follows whatever your system is set to. The button cycles it through
+  light and dark and back to following the system, and remembers which you chose.
 
 ## At the command line
 
-`cramfest.py` is the same tool driven by flags rather than buttons, for anyone
-who would rather work that way. It needs Python and, to read a PDF pool,
-`pdftotext`. Everything below is about it.
+`cramfest.py` is the same tool driven by flags, for anyone who would rather work
+that way. It needs Python, and `pdftotext` to read a PDF pool.
 
 ### Synopsis
 
@@ -146,22 +126,6 @@ cramfest.py
 
 Every mode needs the pool. Nothing else is required to take an exam, so the bare
 form asks for the pool and then takes one.
-
-### You supply the question pool
-
-The pool is not included here. Download the current one from the NCVEC and pass
-it with `--pool`:
-
-https://ncvec.org/index.php/amateur-question-pools
-
-The Technician, General and Extra pools are each reached through that page's
-menu items. Both the released PDF and a plain text dump of one work, though only
-a PDF can give you the diagrams.
-
-Because the exam shape is read from the pool rather than hardcoded, the same
-script covers all three elements. Technician has 35 subelement groups, so a
-Technician exam is 35 questions; point it at another element's pool and you get
-that pool's group count. Passing is 74%, rounded up: 26 of 35, or 37 of 50.
 
 ### Reading a PDF needs pdftotext
 
@@ -194,18 +158,91 @@ default on one question's wording, so there is no reason to prefer it.
 Given a PDF, the script writes the text dump alongside it and reuses it on later
 runs, falling back to a temporary file if that directory is not writable.
 
-### Taking an exam
+### On Windows
 
-Questions come one at a time. Answer `A`, `B`, `C` or `D`, or press `q` to
-abandon the attempt: nothing is saved and nothing is scored, so treat it as
-walking away rather than pausing. There is no resume.
+You need two programs installed alongside Python. Both come from **winget**, the
+package installer that ships with Windows 11 and reaches Windows 10 through the
+App Installer: the same idea as the Microsoft Store, but typed rather than
+clicked.
 
-Finish, and your answers are written to the working directory as
-`technician_answers_2026-08-12_090145.txt`, named for the element you took and
-when. The report gives your score, pass or fail, a per-subelement breakdown, and
-every question you missed with the correct answer.
+Open **Windows Terminal** (press Start, type `terminal`, press Enter) and paste
+these in, one at a time:
 
-Some questions refer to a diagram, and most exams contain at least one — see
+```
+winget install -e --id Schard.Poppler
+winget install -e --id UB-Mannheim.TesseractOCR
+```
+
+Close the terminal and open a new one afterward, so it picks up the newly
+installed programs.
+
+| What it gives you | Without it |
+|---|---|
+| **Poppler** reads the question pool out of the PDF | you must paste the pool into a text file yourself |
+| **Tesseract** identifies the diagrams | questions say `Refer to PDF for Figure T-1` instead of linking it |
+
+Neither is required to take an exam. If `winget` is not recognized, your Windows
+is too old for it; download poppler and tesseract from their own websites
+instead, or skip poppler entirely and paste the pool into a text file, as under
+[Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext).
+
+**Use Windows Terminal, not the old black `cmd.exe` window.** The figure links
+and the **Explain this question** links are clickable only in a terminal that
+supports them. Windows Terminal does; the older console shows them as stray
+punctuation around the words instead. Everything still works either way, but the
+report is unpleasant to read.
+
+If tesseract was installed somewhere other than `PATH`, the script also looks in
+`C:\Program Files\Tesseract-OCR`.
+
+## The question pool
+
+The questions are not included here. You download the pool the NCVEC's question
+pool committee publishes, and everything else is read out of it: which element
+you are studying, how long an exam is, and what it takes to pass.
+
+- **In a browser**, click **Open a pool file** and choose the file. Once it is
+  read, the pool is named in bold on its own line, under the question pool box
+  on the menu and under the title everywhere else, giving the element and the
+  release as in `General, effective 7/01/2023 – 6/30/2027`. That is taken from
+  the pool's own front matter rather than from a filename that may have been
+  renamed.
+- **At the command line**, pass it with `--pool`. A bare run with no flags asks
+  for it, since it is the one thing the script cannot work out for itself.
+
+Download the current pools from the NCVEC:
+
+https://www.ncvec.org/index.php/amateur-question-pools
+
+The Technician, General and Extra pools are each reached through that page's
+menu items. Both the released PDF and a plain text dump of one work, though only
+a PDF can give you the diagrams.
+
+Because the exam shape is read from the pool rather than hardcoded, the same
+tool covers all three elements. Technician has 35 subelement groups, so a
+Technician exam is 35 questions; point it at another element's pool and you get
+that pool's group count. Passing is 74%, rounded up: 26 of 35, or 37 of 50.
+
+## Taking an exam
+
+An exam is one question drawn at random from each subelement group in the pool,
+asked in random order, the way a Volunteer Examiner Coordinator builds one.
+Questions come one at a time, and the attempt is scored when you finish.
+
+- **In a browser**, click **Take an exam** and answer by clicking a choice.
+  **Stop** abandons the attempt. Your answers file downloads when you finish.
+- **At the command line**, run it with just `--pool`. Answer `A`, `B`, `C` or
+  `D`, or press `q` to abandon. Your answers file is written to the working
+  directory.
+
+Abandoning saves nothing and scores nothing, so treat it as walking away rather
+than pausing. There is no resume, in either one.
+
+A finished attempt is saved as `technician_answers_2026-08-12_090145.txt`, named
+for the element you took and when. The report gives your score, pass or fail, a
+per-subelement breakdown, and every question you missed with the correct answer.
+
+Some questions refer to a diagram, and most exams contain at least one: see
 [Diagrams](#diagrams) for how those work.
 
 Each missed question ends with an **Explain this question** link, which searches
@@ -214,7 +251,14 @@ results are usually about the exact question rather than the topic at large. The
 search asks why the other three choices are wrong as well as why the answer is
 right, since knowing what rules them out is most of what makes an answer stick.
 
-### Scoring a saved file
+## Scoring a saved file
+
+An answers file can be scored again later, without retaking anything. It is the
+same file either way, so an exam taken in the browser scores at the command
+line, and one taken at the command line scores in the browser.
+
+- **In a browser**, click **Score a saved answers file** and choose it.
+- **At the command line**, pass it with `--score`:
 
 ```
 python3 cramfest.py --pool pool.pdf --score technician_answers_2026-08-12_090145.txt
@@ -235,7 +279,7 @@ T5C11 A
 T0A01 A
 ```
 
-and `--score` prints that beside the pool you handed it:
+and scoring prints that beside the pool you handed it:
 
 ```
 Answers recorded against: 2026-2030 Technician Pool ... Feb 19 2026.pdf
@@ -247,9 +291,14 @@ renamed the pool, or took it from the PDF and are scoring from the text dump.
 Read the two lines and judge. A file with no header scores normally and reports
 its pool as `unrecorded`.
 
-### Where you need to study
+## Where you need to study
 
-Point `--weak` at any number of saved answers files:
+Given any number of saved answers files, it ranks what you keep getting wrong,
+by subelement and by group, so you know what to drill next.
+
+- **In a browser**, click **Weak areas from answers files** and select as many
+  as you like in the file picker.
+- **At the command line**, point `--weak` at them:
 
 ```
 python3 cramfest.py --pool pool.pdf --weak technician_answers_*.txt
@@ -285,21 +334,27 @@ what to study next. Laid out under the subelement ranking, the two tables line
 up, so you can see which groups made a subelement weak. Both list only groups
 you have missed at least once.
 
-Files are scored against the pool you pass, so anything not in it — an older
-release, a different element — is listed as uncounted rather than folded into
+Files are scored against the pool you pass, so anything not in it, an older
+release or a different element, is listed as uncounted rather than folded into
 the numbers.
 
-### Drilling one area
+## Drilling one area
 
-`--weak` tells you what to study; `--drill` studies it. Pass a subelement or a
-group and it asks every question in it, in random order:
+Where weak areas tell you what to study, a drill studies it: every question in
+one subelement or group, in random order, scored at the end.
+
+- **In a browser**, choose an **Area**, optionally a **Count**, and click
+  **Drill an area**. The area is a menu of what the pool holds, so there is
+  nothing to spell wrong; it wants a subelement or a group chosen rather than
+  the whole pool.
+- **At the command line**, name the area after `--drill`:
 
 ```
 python3 cramfest.py --pool pool.pdf --drill T8C     # one group, 11 questions
 python3 cramfest.py --pool pool.pdf --drill T8      # one subelement, 47
 ```
 
-Groups run 8-15 questions and subelements 23-99, so `--count` caps a long one:
+Groups run 8-15 questions and subelements 23-99, so a count caps a long one:
 
 ```
 python3 cramfest.py --pool pool.pdf --drill E7 --count 20
@@ -315,23 +370,35 @@ questions you missed.
 
 Answers go to `technician_drill_T8C_<timestamp>.txt`, deliberately not the exam
 filename. You drill what you are weak at, so counting drills as exam attempts
-would keep those areas looking bad. Glob whichever set you want:
+would keep those areas looking bad. That way you can ask for either set:
 
 ```
 python3 cramfest.py --pool pool.pdf --weak technician_answers_*.txt   # exams
 python3 cramfest.py --pool pool.pdf --weak technician_drill_*.txt     # drills
 ```
 
-### Learning as you go
+## Learning as you go
 
-`--feedback` tells you the answer straight after each question, instead of
-holding everything back to the end:
+Studying tells you the answer straight after each question, instead of holding
+everything back to the end. Nothing is scored and nothing is written: you saw
+each answer as you went, so there is nothing left to report afterward.
+
+- **In a browser**, click **Study with answers**. Beside each question is a
+  **Skip to** menu that moves to another subelement or group without going back
+  to the menu for it, and an **In pool order** switch. Either one restarts the
+  run in the new area or the new order.
+- **At the command line**, use `--feedback`, narrowed by the same `--drill` and
+  `--count` as a drill. It asks about the order before the first question.
 
 ```
 python3 cramfest.py --pool pool.pdf --feedback
+python3 cramfest.py --pool pool.pdf --feedback --drill T8C
+python3 cramfest.py --pool pool.pdf --feedback --drill T8 --count 20
 ```
 
 ```
+Ask them in (p)ool order, or (s)huffled? [s]:
+
 Question 1/409  [T2A02]
 What is the most common frequency for FM simplex operations in the 2 meter band?
 A. 146.520 MHz
@@ -342,43 +409,38 @@ Your answer (A/B/C/D, or 'q' to stop): B
   Explain this question
 ```
 
-Every question gets the **Explain this question** link, right or wrong — unlike
+Shuffled is the default and is what every other mode does. **Pool order** works
+through the area the way the pool lays it out, which reads better in an area you
+are meeting for the first time, since the pool groups related questions together
+on purpose. An exam and a drill are always shuffled, so a repeated one does not
+rehearse a sequence.
+
+On its own it works through the **whole pool**, not an exam's 35, so it is
+something to dip into rather than finish.
+
+Every question gets the **Explain this question** link, right or wrong, unlike
 the end-of-exam report, which links only what you missed. Here you are studying,
 and a lucky guess is worth reading about too.
 
-On its own it works through the **whole pool**, not an exam's 35, so it is
-something to dip into rather than finish. Narrow it the same way you narrow a
-drill:
-
-```
-python3 cramfest.py --pool pool.pdf --feedback --drill T8C
-python3 cramfest.py --pool pool.pdf --feedback --drill T8 --count 20
-```
-
-It asks how to order what it is about to ask, before the first question:
-
-```
-Ask them in (p)ool order, or (s)huffled? [s]:
-```
-
-Shuffled is the default and is what every other mode does. Pool order works
-through the area the way the pool lays it out, which reads better in an area you
-are meeting for the first time, since the pool groups related questions together
-on purpose. It is asked rather than given as a flag because which one you want
-depends on the area you are about to meet. A drill and an exam are not asked and
-stay shuffled, so a repeated one does not rehearse a sequence.
-
-Press `q` to stop whenever you like. Nothing is scored and **nothing is
-written** — no tally, no pass mark, no answers file. You saw each answer as you
-went, so there is nothing left to report afterward.
-
-### Diagrams
+## Diagrams
 
 Some questions refer to a figure: a schematic or chart printed in the pool PDF.
 Technician has 3 such figures across 12 questions, General 1 across 5, and Extra
-10 across 27.
+10 across 27. Where it can, the tool turns the reference itself into a link, so
+the words the question already uses are what you click.
 
-Where it can, the script turns the reference itself into a link:
+- **In a browser**, clicking `figure T-1` opens the figure under the question.
+  Nothing needs installing: the page pulls the images out of the PDF and reads
+  their captions itself.
+- **At the command line**, the reference becomes a terminal hyperlink that opens
+  the figure in whatever you use for images. That needs the pool as a PDF and
+  **tesseract** installed:
+
+```
+sudo apt install tesseract-ocr                          # Debian, Ubuntu
+brew install tesseract                                  # macOS
+winget install -e --id UB-Mannheim.TesseractOCR         # Windows
+```
 
 ```
 Question 14/35  [T6C02]
@@ -389,67 +451,24 @@ C. Battery
 D. Connector
 ```
 
-Clicking it opens the figure in whatever you use for images. That needs the pool
-as a PDF and **tesseract** installed:
+Either way, the captions are what identify the figures. They are drawn into the
+images rather than stored as text, and the figures cannot be told apart by their
+order: the Extra pool ships a hidden mask alongside every figure, and its
+numbering jumps from E7-3 straight to E9-1. Reading the caption is the only way
+to know which image is which, and showing you the wrong schematic would be worse
+than showing none.
 
-```
-sudo apt install tesseract-ocr                          # Debian, Ubuntu
-brew install tesseract                                  # macOS
-winget install -e --id UB-Mannheim.TesseractOCR         # Windows
-```
-
-Tesseract reads each figure's caption. The captions are drawn into the images
-rather than stored as text, and the figures cannot be told apart by their order:
-the Extra pool ships a hidden mask alongside every figure, and its numbering
-jumps from E7-3 straight to E9-1. Reading the caption is the only way to know
-which image is which, and showing you the wrong schematic would be worse than
-showing none.
-
-Without tesseract, or from a text pool, the question says this instead:
+Where a figure cannot be offered, from a text pool or without tesseract, the
+question names it instead:
 
 ```
 Refer to PDF for Figure T-1
 ```
 
-so keep the pool PDF on hand either way. Figures are extracted once and cached
-beside the pool, or in a temporary directory if that is not writable.
-
-### On Windows
-
-You need two programs installed alongside Python. Both come from **winget**, the
-package installer that ships with Windows 11 and reaches Windows 10 through the
-App Installer — the same idea as the Microsoft Store, but typed rather than
-clicked.
-
-Open **Windows Terminal** (press Start, type `terminal`, press Enter) and paste
-these in, one at a time:
-
-```
-winget install -e --id Schard.Poppler
-winget install -e --id UB-Mannheim.TesseractOCR
-```
-
-Close the terminal and open a new one afterward, so it picks up the newly
-installed programs.
-
-| What it gives you | Without it |
-|---|---|
-| **Poppler** reads the question pool out of the PDF | you must paste the pool into a text file yourself |
-| **Tesseract** identifies the diagrams | questions say `Refer to PDF for Figure T-1` instead of linking it |
-
-Neither is required to take an exam. If `winget` is not recognized, your Windows
-is too old for it; download poppler and tesseract from their own websites
-instead, or skip poppler entirely and paste the pool into a text file, as under
-*Reading a PDF needs pdftotext*.
-
-**Use Windows Terminal, not the old black `cmd.exe` window.** The figure links
-and the **Explain this question** links are clickable only in a terminal that
-supports them. Windows Terminal does; the older console shows them as stray
-punctuation around the words instead. Everything still works either way, but the
-report is unpleasant to read.
-
-If tesseract was installed somewhere other than `PATH`, the script also looks in
-`C:\Program Files\Tesseract-OCR`.
+so keep the pool PDF on hand either way. Reading the captions happens once per
+pool rather than once per question: the command line caches the extracted
+figures beside the pool, or in a temporary directory if that is not writable,
+and the browser keeps them with the pool it remembers.
 
 ## License
 
