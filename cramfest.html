@@ -56,11 +56,19 @@ body {
 }
 main { max-width: 52rem; margin: 0 auto; }
 header {
-  display: flex; align-items: baseline; gap: 1rem;
   max-width: 52rem; margin: 0 auto; padding: 1rem 0;
   border-bottom: 1px solid var(--line);
 }
+.topline { display: flex; align-items: baseline; gap: 1rem; }
 header h1 { font-size: 1.2rem; margin: 0; flex: 1; }
+
+/* Which pool is open, on its own line under the title. Nothing is loaded
+   until a file is opened, and an empty line should not reserve space. */
+#pool-label {
+  text-align: center; font-weight: 600; font-size: 1.1rem;
+  margin-top: .6rem;
+}
+#pool-label:empty { display: none; }
 h2 { font-size: 1.05rem; margin: 1.5rem 0 .5rem; }
 button {
   font: inherit; color: var(--ink); background: var(--btn);
@@ -80,9 +88,32 @@ input[type=number] { width: 6rem; }
   border-radius: 8px; padding: 1rem; margin: 1rem 0;
 }
 .row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.spacer { flex: 1 1 auto; }
 .muted { color: var(--muted); }
 .hidden { display: none !important; }
-.qhead { color: var(--muted); font-size: .9rem; margin-bottom: .5rem; }
+.qhead { color: var(--muted); font-size: .9rem; margin-bottom: .75rem; }
+
+/* The question, with what steers it beside rather than above. Narrow, the
+   two stack and the steering goes first, so it sits between the question's
+   number and the question itself rather than below the answers. */
+.beside { display: flex; gap: 1.75rem; align-items: flex-start; }
+.asking { flex: 1 1 auto; min-width: 0; }
+.steering {
+  flex: 0 0 11rem;
+  display: flex; flex-direction: column; gap: .4rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--line); border-radius: 6px;
+}
+.steering label { color: var(--muted); font-size: .9rem; }
+.steering select { width: 100%; }
+@media (max-width: 46rem) {
+  .beside { flex-direction: column; gap: 1rem; }
+  .steering { order: -1; flex: 0 0 auto; width: 100%; }
+}
+select {
+  font: inherit; color: var(--ink); background: var(--btn);
+  border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem;
+}
 .qbody { font-size: 1.05rem; margin: 0 0 1rem; white-space: pre-wrap; }
 .choices { display: flex; flex-direction: column; gap: .4rem; }
 .choices button { text-align: left; }
@@ -107,9 +138,11 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
 <body>
 
 <header>
-  <h1>Ham Test Cramfest</h1>
-  <span id="pool-label" class="muted"></span>
-  <button id="theme-toggle" title="Light / dark / follow the system">Theme: system</button>
+  <div class="topline">
+    <h1>Ham Test Cramfest</h1>
+    <button id="theme-toggle" title="Light / dark / follow the system">Theme: system</button>
+  </div>
+  <div id="pool-label"></div>
 </header>
 
 <main>
@@ -119,23 +152,28 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
   <p class="muted">Give it an NCVEC question pool: the released PDF, or a text dump of one.
   Nothing is uploaded anywhere; the file is read in this page.</p>
   <div class="row">
-    <input type="file" id="pool-file" accept=".pdf,.txt,text/plain,application/pdf">
+    <button id="pool-pick">Open a pool file</button>
+    <span id="pool-chosen" class="muted"></span>
+    <span class="spacer"></span>
     <button id="pool-forget" class="hidden">Forget the kept pool</button>
   </div>
+  <input type="file" id="pool-file" class="hidden" accept=".pdf,.txt,text/plain,application/pdf">
   <p id="pool-status" class="muted"></p>
 </section>
 
 <section id="modes" class="panel hidden">
-  <h2>What now</h2>
+  <h2>Menu</h2>
   <div class="row">
     <button id="start-exam">Take an exam</button>
     <button id="start-drill">Drill an area</button>
     <button id="start-feedback">Study with answers</button>
   </div>
   <div class="row" style="margin-top:.75rem">
-    <label>Area <input type="text" id="area" placeholder="T8 or T8C" size="8"></label>
+    <label>Area <select id="area"></select></label>
     <label>Count <input type="number" id="count" min="1" placeholder="all"></label>
-    <span class="muted">Used by drill; optional for study.</span>
+    <label><input type="checkbox" id="in-order"> In pool order</label>
+    <span class="muted">Area and count are used by drill, optional for study. In pool
+    order applies to study; a drill and an exam are always shuffled.</span>
   </div>
   <div class="row" style="margin-top:1rem">
     <button id="pick-score">Score a saved answers file</button>
@@ -150,13 +188,21 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
 <section id="quiz" class="panel hidden">
   <div id="quiz-intro" class="muted"></div>
   <div class="qhead" id="quiz-head"></div>
-  <div class="qbody" id="quiz-body"></div>
-  <div id="quiz-figure"></div>
-  <div class="choices" id="quiz-choices"></div>
-  <div class="verdict hidden" id="quiz-verdict"></div>
-  <div class="row" style="margin-top:1rem">
-    <button id="quiz-next" class="hidden">Next question</button>
-    <button id="quiz-stop">Stop</button>
+  <div class="beside">
+    <div class="asking">
+      <div class="qbody" id="quiz-body"></div>
+      <div class="choices" id="quiz-choices"></div>
+      <div class="verdict hidden" id="quiz-verdict"></div>
+      <div class="row" style="margin-top:1rem">
+        <button id="quiz-next" class="hidden">Next question</button>
+        <button id="quiz-stop">Stop</button>
+      </div>
+    </div>
+    <aside class="steering hidden" id="quiz-side">
+      <label for="quiz-jump">Skip to</label>
+      <select id="quiz-jump"></select>
+      <label><input type="checkbox" id="quiz-order"> In pool order</label>
+    </aside>
   </div>
 </section>
 
@@ -164,7 +210,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
   <div id="report-body"></div>
   <div class="row" style="margin-top:1rem">
     <button id="report-save" class="hidden">Save answers file</button>
-    <button id="report-back">Back to what now</button>
+    <button id="report-back">Back to the menu</button>
   </div>
 </section>
 
@@ -324,6 +370,22 @@ function choice(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+/* Each subelement the pool holds, and the groups under it, in pool order.
+
+   Subelement 0 comes last that way, which is where the pool puts it, rather
+   than first, which is where sorting would. */
+function poolAreas(pool) {
+  const areas = new Map();
+  for (const qid of pool.keys()) {
+    const subelement = qid.slice(0, 2);
+    const group = qid.slice(0, 3);
+    if (!areas.has(subelement)) areas.set(subelement, []);
+    const groups = areas.get(subelement);
+    if (!groups.includes(group)) groups.push(group);
+  }
+  return areas;
+}
+
 function buildExam(pool) {
   const byGroup = new Map();
   for (const qid of pool.keys()) {
@@ -334,14 +396,20 @@ function buildExam(pool) {
   return shuffle([...byGroup.values()].map(choice));
 }
 
-/* The questions in a subelement or group, shuffled, optionally fewer.
+/* The questions in a subelement or group, optionally fewer.
+
+   Shuffled unless asked for in order, which only studying asks for: working
+   through an area the way the pool lays it out puts related questions next to
+   each other, and the pool groups them that way on purpose. A drill and an
+   exam stay shuffled, so that a repeated one does not rehearse a sequence.
 
    A count outside what the area holds asks all of it: nothing sensible is
    meant by fewer than one, and asking for more than exists is just asking for
    everything. */
-function drillQuestions(pool, area, count) {
+function drillQuestions(pool, area, count, ordered) {
   area = area ? area.toUpperCase() : "";
-  const chosen = shuffle([...pool.keys()].filter((qid) => qid.startsWith(area)));
+  const found = [...pool.keys()].filter((qid) => qid.startsWith(area));
+  const chosen = ordered ? found : shuffle(found);
   if (!chosen.length) {
     throw new Refused(`No questions in ${area}. Give a subelement like T8, or a group like T8C.`);
   }
@@ -772,6 +840,7 @@ async function forget() {
 /* ---------------------------------------------------------------- view ---- */
 
 const state = {
+  ordered: false,
   pool: null,
   poolName: "",
   figures: new Map(),
@@ -933,12 +1002,35 @@ window.addEventListener("beforeunload", (event) => {
 
 /* -------------------------------------------------------------- a quiz ---- */
 
-function startSession({ questions, feedback, intro, saveAs, report }) {
+/* Fill an area menu with what this pool holds: the whole pool, every
+   subelement, and every group beneath it.
+
+   The same menu serves both screens. On the mode list it says what to drill
+   or study; in a study run it moves to another area without going back for
+   it. Typing an area was the alternative, and a pool's areas are a list the
+   pool already knows. */
+function fillAreas(menu, pool) {
+  menu.replaceChildren();
+  menu.append(new Option("The whole pool", ""));
+  for (const [subelement, groups] of poolAreas(pool)) {
+    const under = document.createElement("optgroup");
+    under.label = subelement;
+    under.append(new Option(`All of ${subelement}`, subelement));
+    for (const group of groups) under.append(new Option(group, group));
+    menu.append(under);
+  }
+}
+
+function startSession({ questions, feedback, intro, saveAs, report, jump }) {
   state.session = { questions, feedback, report, saveAs, at: 0, given: [] };
   el("quiz-intro").textContent = intro;
+  // Only studying steers: an exam is drawn across the whole pool, and a
+  // drill is one area by definition.
+  show("quiz-side", jump !== undefined);
+  if (jump !== undefined) el("quiz-jump").value = jump;
   // Leaving a run that would have saved something is an abandonment, and
   // says so on the way out. Leaving one that never would is just leaving.
-  el("quiz-stop").textContent = saveAs ? "Stop" : "Back to what now";
+  el("quiz-stop").textContent = saveAs ? "Stop" : "Back to the menu";
   el("mode-note").textContent = "";
   goTo("quiz");
   showQuestion();
@@ -1170,14 +1262,15 @@ function poolReady({ pool, name, effective, figures }, note, ending) {
   const element = poolElement(pool);
   const named = element[0].toUpperCase() + element.slice(1);
   el("pool-label").textContent = effective ? `${named}, effective ${effective}` : `${named}: ${name}`;
+  el("pool-chosen").textContent = name;
 
   const groups = new Set([...pool.keys()].map((qid) => qid.slice(0, 3)));
   note(`${pool.size} questions in ${groups.size} groups. ` +
     `An exam is ${groups.size} questions, ${passMark(groups.size)} to pass. ` +
     (figures.size ? `${figures.size} figure(s). ` : "No figures; questions will name them instead. ") +
     ending);
-  const letter = pool.keys().next().value[0];
-  el("area").placeholder = `${letter}8 or ${letter}8C`;
+  fillAreas(el("area"), pool);
+  fillAreas(el("quiz-jump"), pool);
   goTo("modes", true);
 }
 
@@ -1237,7 +1330,8 @@ el("start-exam").addEventListener("click", guard(() => {
 
 el("start-drill").addEventListener("click", guard(() => {
   const { area, count } = areaAndCount();
-  if (!area) throw new Refused("Give an area to drill, like T8 or T8C.");
+  if (!area) throw new Refused("Choose a subelement or group to drill. The whole pool "
+    + "is what an exam or a study run asks.");
   const questions = drillQuestions(state.pool, area, count);
   startSession({
     questions,
@@ -1248,16 +1342,38 @@ el("start-drill").addEventListener("click", guard(() => {
   });
 }));
 
-el("start-feedback").addEventListener("click", guard(() => {
-  const { area, count } = areaAndCount();
-  const questions = drillQuestions(state.pool, area, count);
+/* Study an area, from the mode list or from the menu beside the question.
+
+   The two screens each carry the order switch, because the reason to change
+   it usually arrives once you are already reading: an area you know goes
+   faster shuffled, one you are meeting for the first time reads better the
+   way the pool lays it out. Whichever you touch, the run restarts. */
+function study(area) {
+  const { count } = areaAndCount();
+  const questions = drillQuestions(state.pool, area, count, state.ordered);
   startSession({
     questions,
     feedback: true,
-    intro: `${questions.length} questions${area ? ` from ${area.toUpperCase()}` : ""}, with the answer after each.`,
+    intro: `${questions.length} questions${area ? ` from ${area.toUpperCase()}` : ""}, ` +
+      `${state.ordered ? "in pool order" : "shuffled"}, with the answer after each.`,
     saveAs: null,
     report: reportStudy,
+    jump: area.toUpperCase(),
   });
+}
+
+function setOrdered(ordered) {
+  state.ordered = ordered;
+  el("in-order").checked = ordered;
+  el("quiz-order").checked = ordered;
+}
+
+el("start-feedback").addEventListener("click", guard(() => study(areaAndCount().area)));
+el("quiz-jump").addEventListener("change", guard((event) => study(event.target.value)));
+el("in-order").addEventListener("change", (event) => setOrdered(event.target.checked));
+el("quiz-order").addEventListener("change", guard((event) => {
+  setOrdered(event.target.checked);
+  study(el("quiz-jump").value);
 }));
 
 el("quiz-next").addEventListener("click", guard(advance));
@@ -1267,6 +1383,7 @@ el("report-save").addEventListener("click", () => {
   if (state.saved) download(state.saved.name, state.saved.text);
 });
 
+el("pool-pick").addEventListener("click", () => el("pool-file").click());
 el("pick-score").addEventListener("click", () => el("score-file").click());
 el("pick-weak").addEventListener("click", () => el("weak-files").click());
 
@@ -1339,6 +1456,7 @@ el("pool-forget").addEventListener("click", async () => {
   state.figures = new Map();
   state.poolName = "";
   el("pool-label").textContent = "";
+  el("pool-chosen").textContent = "";
   el("pool-status").textContent = "Forgotten. Open a pool to start again.";
   el("pool-file").value = "";
   show("pool-forget", false);

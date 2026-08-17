@@ -340,6 +340,17 @@ Buttons stand in for the flags:
 | Score a saved answers file | `--score <answers>` |
 | Weak areas from answers files | `--weak <answers>...` |
 
+**Area** is a menu of what the pool holds rather than something to type: the
+whole pool, each subelement, and each group beneath it.
+
+Studying has two things the command line has no place for. **In pool order**
+works through an area the way the pool lays it out instead of shuffled, which
+reads better in an area you are meeting for the first time. And beside each
+question is a **Skip to** menu that moves to another subelement or group without
+going back for it, along with the same order switch, because the reason to
+change it usually arrives once you are already reading. An exam and a drill stay
+shuffled whatever the switch says.
+
 **Theme** follows whatever your system is set to. The button cycles it through
 light and dark and back to following the system, and remembers which you chose.
 
