@@ -6,25 +6,39 @@ Coordinator does: one question drawn at random from each subelement group.
 
 ## Start here
 
-Nothing to install, no account, no sign-up. Two steps.
+Get a question pool, then run it either way. No account, no sign-up.
 
 **1. Get a question pool.** The questions are published free by the NCVEC. On
 [their question pool page][pools], open the one for the license you are studying
 for and download the pool PDF: the file named as the pool and syllabus, not the
 separate diagrams or errata file.
 
-**2. [Run it in your browser][run].** Click **Open a pool file**, choose the PDF
-you just downloaded, wait a few seconds while it reads, and take an exam.
+**2a. [Run it in your browser][run].** Nothing to install. Click **Open a pool
+file**, choose the PDF you just downloaded, wait a few seconds while it reads,
+and take an exam.
 
-Nothing you do leaves your machine. Your pool is read inside the page rather
-than sent anywhere, and your answers are saved to your own downloads folder.
+To keep your own copy of the page, open [cramfest.html][file] and click the
+button just above the file labeled **Download raw file**. Save it anywhere and
+double-click it whenever you want it; it is one file and it works the same way.
 
-**To keep your own copy**, open [cramfest.html][file] and click the button just
-above the file labeled **Download raw file**. Save it anywhere and double-click
-it whenever you want it; it is one file and it works the same way.
+**2b. Or run it in Python.** Download [cramfest.py][script] the same way, and
+point it at the pool:
+
+```
+python3 cramfest.py --pool <the file you downloaded>
+```
+
+A PDF also needs `pdftotext` installed, which
+[At the command line](#at-the-command-line) covers, along with what to do on
+Windows. Nothing else is required.
+
+Either way, nothing you do leaves your machine. Your pool is read where you
+opened it rather than sent anywhere, and your answers are saved on your own
+disk: the browser's downloads folder, or the directory you ran the script from.
 
 [run]: https://sjlxndr.github.io/hamtestcramfest/cramfest.html
 [file]: https://github.com/sjlxndr/hamtestcramfest/blob/main/cramfest.html
+[script]: https://github.com/sjlxndr/hamtestcramfest/blob/main/cramfest.py
 [pools]: https://www.ncvec.org/index.php/amateur-question-pools
 
 ## Contents
