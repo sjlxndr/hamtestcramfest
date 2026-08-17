@@ -242,7 +242,8 @@ const FIGURE = /figure\s+([TGE][0-9]?-[0-9]+)/i;
 // keeps this off the many other lines saying "effective": the pools write
 // "effective radiated power" throughout. What follows is not a date in any
 // one shape, so nothing is assumed about it: Technician and General give a
-// range, "7/01/2026 - 6/30/2030", while Extra gives "July 1, 2024".
+// range, "7/01/2026 – 6/30/2030", joined by an en dash rather than a hyphen,
+// while Extra gives "July 1, 2024".
 const EFFECTIVE = /FCC Element \d Question Pool[^\n]*\n\s*Effective\s+([^\n]+)/i;
 
 function poolEffective(text) {
@@ -773,7 +774,6 @@ async function forget() {
 const state = {
   pool: null,
   poolName: "",
-  poolEffective: null,
   figures: new Map(),
   session: null,
   saved: null,
@@ -1165,7 +1165,6 @@ function areaAndCount() {
 function poolReady({ pool, name, effective, figures }, note, ending) {
   state.pool = pool;
   state.poolName = name;
-  state.poolEffective = effective;
   state.figures = figures;
 
   const element = poolElement(pool);
@@ -1339,7 +1338,6 @@ el("pool-forget").addEventListener("click", async () => {
   state.pool = null;
   state.figures = new Map();
   state.poolName = "";
-  state.poolEffective = null;
   el("pool-label").textContent = "";
   el("pool-status").textContent = "Forgotten. Open a pool to start again.";
   el("pool-file").value = "";
