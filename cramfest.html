@@ -78,7 +78,7 @@ button {
 button:hover:not(:disabled) { background: var(--btn-hover); }
 button:disabled { opacity: .5; cursor: default; }
 a { color: var(--accent); }
-input[type=text], input[type=number] {
+input[type=number] {
   font: inherit; color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem;
 }
@@ -430,9 +430,18 @@ function asked(body) {
 /* A search for the question, the ID leading the query.
 
    Study sites index the pool by ID, so it finds material about this exact
-   question rather than the topic in general. */
+   question rather than the topic in general.
+
+   The query asks why the wrong choices are wrong as well as why the right one
+   is right, because knowing what rules out the other three is most of what
+   makes the answer stick, and an explanation that only defends the answer
+   often leaves the plausible distractor unaddressed. The choices themselves
+   still stay out of the query, since they are what a search engine matches
+   worst; the pages the ID finds carry all four. */
 function explainUrl(qid, body) {
-  const query = encodeURIComponent(`Explain this ham radio question: ${qid} ${asked(body)}`);
+  const query = encodeURIComponent(
+    `Explain this ham radio question, and why each of the other answer choices ` +
+    `is wrong: ${qid} ${asked(body)}`);
   return SEARCH_URL + query;
 }
 
