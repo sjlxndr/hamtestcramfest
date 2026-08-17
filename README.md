@@ -331,13 +331,16 @@ beside the pool, or in a temporary directory if that is not writable.
 your pool; everything else is the same exam, the same drills, the same scoring.
 
 It runs two ways, and they behave alike. [Hosted][run], nothing is downloaded at
-all and the PDF is read on a background thread. Saved to your own disk, it is
-still one self-contained file that opens by double-clicking, and reads the PDF on
-the same thread it draws with, which costs a second or two on a large pool.
+all, and the PDF is read on a background thread so the page stays responsive
+while it works. Saved to your own disk, it is one self-contained file that opens
+by double-clicking and does the same reading on the thread that draws the page.
+A pool takes the same few seconds to read either way.
 
-Nothing installs and nothing runs on a server. The pool is read inside the page,
-and the answers files it saves are the ones `cramfest.py` reads, so you can take
-an exam in the browser and score it at the command line or the other way round.
+Nothing installs, and nothing of this runs on a server: hosted or saved, the page
+is a static file and the work happens in your own browser. The pool is read
+inside the page, and the answers files it saves are the ones `cramfest.py` reads,
+so you can take an exam in the browser and score it at the command line or the
+other way round.
 
 The pool is kept once read, figures included, so a refresh brings it straight
 back instead of reading it again. Opening another pool replaces it, and **Forget
