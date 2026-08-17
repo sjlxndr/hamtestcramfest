@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ham Test Cramfest</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --panel: #f4f4f6;
+  --ink: #16181d;
+  --muted: #5c6270;
+  --line: #d3d6dd;
+  --accent: #1f5fbf;
+  --good: #1a7f37;
+  --bad: #b32d2e;
+  --btn: #ffffff;
+  --btn-hover: #e8ecf4;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #14161a;
+  --panel: #1e2127;
+  --ink: #e6e8ec;
+  --muted: #9aa1ad;
+  --line: #343943;
+  --accent: #6fa8ff;
+  --good: #56d364;
+  --bad: #ff7b72;
+  --btn: #262a32;
+  --btn-hover: #333844;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #14161a;
+    --panel: #1e2127;
+    --ink: #e6e8ec;
+    --muted: #9aa1ad;
+    --line: #343943;
+    --accent: #6fa8ff;
+    --good: #56d364;
+    --bad: #ff7b72;
+    --btn: #262a32;
+    --btn-hover: #333844;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 0 1rem 4rem;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 52rem; margin: 0 auto; }
+header {
+  max-width: 52rem; margin: 0 auto; padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.topline { display: flex; align-items: baseline; gap: 1rem; }
+header h1 { font-size: 1.2rem; margin: 0; flex: 1; }
+
+/* Which pool is open, on its own line under the title. Nothing is loaded
+   until a file is opened, and an empty line should not reserve space. */
+#pool-label {
+  text-align: center; font-weight: 600; font-size: 1.1rem;
+  margin-top: .6rem;
+}
+#pool-label:empty { display: none; }
+#pool-label.between { margin: 1.25rem 0; }
+h2 { font-size: 1.05rem; margin: 1.5rem 0 .5rem; }
+button {
+  font: inherit; color: var(--ink); background: var(--btn);
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: .45rem .8rem; cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--btn-hover); }
+button:disabled { opacity: .5; cursor: default; }
+a { color: var(--accent); }
+input[type=number] {
+  font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem;
+}
+input[type=number] { width: 6rem; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 1rem; margin: 1rem 0;
+}
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.spacer { flex: 1 1 auto; }
+.muted { color: var(--muted); }
+.hidden { display: none !important; }
+.qhead { color: var(--muted); font-size: .9rem; margin-bottom: .75rem; }
+
+/* The question, with what steers it beside rather than above. Narrow, the
+   two stack and the steering goes first, so it sits between the question's
+   number and the question itself rather than below the answers. */
+.beside { display: flex; gap: 1.75rem; align-items: flex-start; }
+.asking { flex: 1 1 auto; min-width: 0; }
+.steering {
+  flex: 0 0 11rem;
+  display: flex; flex-direction: column; gap: .4rem;
+  padding: .7rem .8rem;
+  border: 1px solid var(--line); border-radius: 6px;
+}
+.steering label { color: var(--muted); font-size: .9rem; }
+.steering select { width: 100%; }
+@media (max-width: 46rem) {
+  .beside { flex-direction: column; gap: 1rem; }
+  .steering { order: -1; flex: 0 0 auto; width: 100%; }
+}
+select {
+  font: inherit; color: var(--ink); background: var(--btn);
+  border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem;
+}
+.qbody { font-size: 1.05rem; margin: 0 0 1rem; white-space: pre-wrap; }
+.choices { display: flex; flex-direction: column; gap: .4rem; }
+.choices button { text-align: left; }
+.verdict { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--line); }
+.correct { color: var(--good); font-weight: 600; }
+.wrong { color: var(--bad); font-weight: 600; }
+.missed { border-top: 1px solid var(--line); padding-top: .75rem; margin-top: .75rem; }
+table { border-collapse: collapse; margin: .25rem 0 1rem; }
+th, td { text-align: left; padding: .15rem .9rem .15rem 0; }
+th { color: var(--muted); font-weight: 600; }
+td.num { text-align: right; padding-right: .5rem; }
+figure { margin: .75rem 0; }
+figure img {
+  max-width: 100%; background: #fff; border: 1px solid var(--line);
+  border-radius: 4px; padding: .25rem;
+}
+progress { width: 12rem; }
+.err { color: var(--bad); }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topline">
+    <h1>Ham Test Cramfest</h1>
+    <button id="theme-toggle" title="Light / dark / follow the system">Theme: system</button>
+  </div>
+  <div id="pool-label"></div>
+</header>
+
+<main>
+
+<section id="setup" class="panel">
+  <h2>Question pool</h2>
+  <p class="muted">Give it an NCVEC question pool: the released PDF, or a text dump of one.
+  Nothing is uploaded anywhere; the file is read in this page.</p>
+  <div class="row">
+    <button id="pool-pick">Open a pool file</button>
+    <span id="pool-chosen" class="muted"></span>
+    <span class="spacer"></span>
+    <button id="pool-forget" class="hidden">Forget the kept pool</button>
+  </div>
+  <input type="file" id="pool-file" class="hidden" accept=".pdf,.txt,text/plain,application/pdf">
+  <p id="pool-status" class="muted"></p>
+</section>
+
+<section id="modes" class="panel hidden">
+  <h2>Menu</h2>
+  <div class="row">
+    <button id="start-exam">Take an exam</button>
+    <button id="start-drill">Drill an area</button>
+    <button id="start-feedback">Study with answers</button>
+  </div>
+  <div class="row" style="margin-top:.75rem">
+    <label>Area <select id="area"></select></label>
+    <label>Count <input type="number" id="count" min="1" placeholder="all"></label>
+    <label><input type="checkbox" id="in-order"> In pool order</label>
+    <span class="muted">Area and count are used by drill, optional for study. In pool
+    order applies to study; a drill and an exam are always shuffled.</span>
+  </div>
+  <div class="row" style="margin-top:1rem">
+    <button id="pick-score">Score a saved answers file</button>
+    <button id="pick-weak">Weak areas from answers files</button>
+  </div>
+  <input type="file" id="score-file" accept=".txt" class="hidden">
+  <input type="file" id="weak-files" accept=".txt" multiple class="hidden">
+  <p id="mode-note" class="muted"></p>
+  <p id="mode-error" class="err"></p>
+  <p class="muted"><a href="https://github.com/sjlxndr/hamtestcramfest#readme"
+    target="_blank" rel="noopener">README</a>: what this does, where to get a question
+    pool, and the command line version of the same thing.</p>
+</section>
+
+<section id="quiz" class="panel hidden">
+  <div id="quiz-intro" class="muted"></div>
+  <div class="qhead" id="quiz-head"></div>
+  <div class="beside">
+    <div class="asking">
+      <div class="qbody" id="quiz-body"></div>
+      <div class="choices" id="quiz-choices"></div>
+      <div class="verdict hidden" id="quiz-verdict"></div>
+      <div class="row" style="margin-top:1rem">
+        <button id="quiz-next" class="hidden">Next question</button>
+        <button id="quiz-stop">Stop</button>
+      </div>
+    </div>
+    <aside class="steering hidden" id="quiz-side">
+      <label for="quiz-jump">Skip to</label>
+      <select id="quiz-jump"></select>
+      <label><input type="checkbox" id="quiz-order"> In pool order</label>
+    </aside>
+  </div>
+</section>
+
+<section id="report" class="panel hidden">
+  <div id="report-body"></div>
+  <div class="row" style="margin-top:1rem">
+    <button id="report-save" class="hidden">Save answers file</button>
+    <button id="report-back">Back to the menu</button>
+  </div>
+</section>
+
+</main>
+
+<script type="module">
+const PDF_JS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs";
+const PDF_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.mjs";
+const TESSERACT_JS = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+
+// Both libraries are fetched when something actually needs them, never at
+// load. A text dump of the pool needs neither, so that way in wants no
+// network at all.
+let pdfjs = null;
+let pdfjsLoading = null;
+
+function loadPdfjs() {
+  if (!pdfjsLoading) {
+    pdfjsLoading = (async () => {
+      const library = await import(PDF_JS);
+      // The library will not load its worker from a CDN address, and a page
+      // opened from disk has no origin it considers its own, so from there
+      // it reads the pool on this thread whatever is set here. Handing over
+      // a blob of the source is what that fallback loads, and is what gets a
+      // real worker when the page is served rather than opened.
+      library.GlobalWorkerOptions.workerSrc = URL.createObjectURL(
+        new Blob([await (await fetch(PDF_WORKER)).text()], { type: "text/javascript" })
+      );
+      pdfjs = library;
+      return library;
+    })().catch((problem) => {
+      pdfjsLoading = null; // so reconnecting and trying again is worth doing
+      throw problem;
+    });
+  }
+  return pdfjsLoading;
+}
+
+/* ---------------------------------------------------------------- pool ---- */
+
+const ID = "[TGE][0-9][A-Z][0-9]{2}";
+
+// What a question opens with: its ID, the correct answer, an optional rule
+// reference. Deliberately unanchored. A PDF holds positioned glyphs rather
+// than lines, so every extractor guesses where the lines break and guesses
+// differently; matching on position instead of line structure is what makes
+// the parser indifferent to which one produced the text.
+const HEADER = new RegExp(`(${ID})\\s+\\(([A-D])\\)\\s*(?:\\[([^\\]]+)\\])?`, "g");
+
+// The pool body opens with question 01 of group 1A. Everything before it is
+// errata, syllabus and cover pages.
+const POOL_OPENS = "1A01";
+
+// Closes a question's content. Not a delimiter, but without trimming here the
+// last choice swallows it along with any page furniture between questions.
+const TERMINATOR = "~~";
+
+const PASS_PERCENT = 74;
+const VALID = ["A", "B", "C", "D"];
+
+// Question ID prefixes, matching ID's character class.
+const ELEMENTS = { T: "technician", G: "general", E: "extra" };
+
+// Opens an answers file, naming the pool the answers were given against.
+const POOL_HEADER = "# pool:";
+
+const SEARCH_URL = "https://www.google.com/search?q=";
+
+// How a question names the figure it needs. Technician writes T-1, General
+// and Extra carry the subelement digit, as in G7-1 and E5-1.
+const FIGURE = /figure\s+([TGE][0-9]?-[0-9]+)/i;
+
+// Which release this is, from the pool's own front matter rather than from a
+// filename that may have been renamed. The element heading above it is what
+// keeps this off the many other lines saying "effective": the pools write
+// "effective radiated power" throughout. What follows is not a date in any
+// one shape, so nothing is assumed about it: Technician and General give a
+// range, "7/01/2026 – 6/30/2030", joined by an en dash rather than a hyphen,
+// while Extra gives "July 1, 2024".
+const EFFECTIVE = /FCC Element \d Question Pool[^\n]*\n\s*Effective\s+([^\n]+)/i;
+
+function poolEffective(text) {
+  const found = EFFECTIVE.exec(text);
+  return found ? found[1].trim() : null;
+}
+
+class Refused extends Error {}
+
+/* The question and its four choices, or null if all four are not there.
+
+   Each marker is the first occurrence after the previous one, and no
+   whitespace is required around it in either direction. The published Extra
+   pool contains "UHF D.A DX spotting system" with no space after the period,
+   and copied text welds the other way, as in "the aircraftB. The amateur
+   station". */
+function splitChoices(content) {
+  const cuts = [];
+  let at = 0;
+  for (const letter of VALID) {
+    const found = content.indexOf(letter + ".", at);
+    if (found === -1) return null;
+    cuts.push(found);
+    at = found + 2;
+  }
+  const bounds = cuts.concat([content.length]);
+  const parts = [content.slice(0, cuts[0])];
+  for (let i = 0; i < cuts.length; i++) parts.push(content.slice(bounds[i], bounds[i + 1]));
+  return parts.map((part) => part.trim());
+}
+
+function loadPool(text, where) {
+  const flat = text.split(/\s+/).join(" "); // position, not line structure
+  HEADER.lastIndex = 0;
+  const heads = [...flat.matchAll(HEADER)];
+
+  const questions = [];
+  for (let n = 0; n < heads.length; n++) {
+    const head = heads[n];
+    const end = n + 1 < heads.length ? heads[n + 1].index : flat.length;
+    let content = flat.slice(head.index + head[0].length, end);
+    const stop = content.indexOf(TERMINATOR);
+    if (stop !== -1) content = content.slice(0, stop);
+
+    const parts = splitChoices(content);
+    if (parts) { // a header with nothing question-shaped after it is not one
+      questions.push([head[1], { answer: head[2], reference: head[3], body: parts.join("\n") }]);
+    }
+  }
+
+  const opens = questions.findIndex((q) => q[0].slice(1) === POOL_OPENS);
+  if (opens === -1) {
+    throw new Refused(
+      `Cannot find where the pool starts in ${where}: no question numbered ` +
+      `${POOL_OPENS}. Is it an NCVEC question pool?`
+    );
+  }
+
+  return new Map(questions.slice(opens));
+}
+
+/* Questions needed to pass: 74%, rounded up.
+
+   Gives 26 of 35 and 37 of 50, the published FCC thresholds. */
+function passMark(total) {
+  return Math.ceil((PASS_PERCENT * total) / 100);
+}
+
+function shuffle(items) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+function choice(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+/* Each subelement the pool holds, and the groups under it, in pool order.
+
+   Subelement 0 comes last that way, which is where the pool puts it, rather
+   than first, which is where sorting would. */
+function poolAreas(pool) {
+  const areas = new Map();
+  for (const qid of pool.keys()) {
+    const subelement = qid.slice(0, 2);
+    const group = qid.slice(0, 3);
+    if (!areas.has(subelement)) areas.set(subelement, []);
+    const groups = areas.get(subelement);
+    if (!groups.includes(group)) groups.push(group);
+  }
+  return areas;
+}
+
+function buildExam(pool) {
+  const byGroup = new Map();
+  for (const qid of pool.keys()) {
+    const group = qid.slice(0, 3);
+    if (!byGroup.has(group)) byGroup.set(group, []);
+    byGroup.get(group).push(qid);
+  }
+  return shuffle([...byGroup.values()].map(choice));
+}
+
+/* The questions in a subelement or group, optionally fewer.
+
+   Shuffled unless asked for in order, which only studying asks for: working
+   through an area the way the pool lays it out puts related questions next to
+   each other, and the pool groups them that way on purpose. A drill and an
+   exam stay shuffled, so that a repeated one does not rehearse a sequence.
+
+   A count outside what the area holds asks all of it: nothing sensible is
+   meant by fewer than one, and asking for more than exists is just asking for
+   everything. */
+function drillQuestions(pool, area, count, ordered) {
+  area = area ? area.toUpperCase() : "";
+  const found = [...pool.keys()].filter((qid) => qid.startsWith(area));
+  const chosen = ordered ? found : shuffle(found);
+  if (!chosen.length) {
+    throw new Refused(`No questions in ${area}. Give a subelement like T8, or a group like T8C.`);
+  }
+  if (count !== null && count >= 1 && count < chosen.length) return chosen.slice(0, count);
+  return chosen;
+}
+
+/* The question itself, without its answer choices.
+
+   Choices are dropped so the search query is the question and nothing else;
+   every question in every pool opens its choices with an "A." line. */
+function asked(body) {
+  const lines = body.split("\n");
+  const cut = lines.findIndex((line) => /^A\.\s/.test(line));
+  return lines.slice(0, cut === -1 ? 1 : cut).join(" ").trim();
+}
+
+/* A search for the question, the ID leading the query.
+
+   Study sites index the pool by ID, so it finds material about this exact
+   question rather than the topic in general.
+
+   The query asks why the wrong choices are wrong as well as why the right one
+   is right, because knowing what rules out the other three is most of what
+   makes the answer stick, and an explanation that only defends the answer
+   often leaves the plausible distractor unaddressed. The choices themselves
+   still stay out of the query, since they are what a search engine matches
+   worst; the pages the ID finds carry all four. */
+function explainUrl(qid, body) {
+  const query = encodeURIComponent(
+    `Explain this ham radio question, and why each of the other answer choices ` +
+    `is wrong: ${qid} ${asked(body)}`);
+  return SEARCH_URL + query;
+}
+
+/* ------------------------------------------------------------- scoring ---- */
+
+/* The questions answered wrongly, refusing answers the pool lacks. */
+function missedIn(given, pool) {
+  const unknown = given.filter(([qid]) => !pool.has(qid)).map(([qid]) => qid);
+  if (unknown.length) throw new Refused(`Not in this pool: ${unknown.join(", ")}. Wrong pool file?`);
+  return given.filter(([qid, ans]) => pool.get(qid).answer !== ans);
+}
+
+function counter() {
+  const counts = new Map();
+  return {
+    add(key) { counts.set(key, (counts.get(key) || 0) + 1); },
+    get(key) { return counts.get(key) || 0; },
+    keys() { return [...counts.keys()]; },
+  };
+}
+
+/* Wrong and asked counts per subelement and per group, over every file. */
+function weakAreas(files, pool) {
+  const wrong = counter();
+  const asked = counter();
+  const unknown = [];
+  for (const file of files) {
+    for (const [qid, answer] of file.given) {
+      if (!pool.has(qid)) { unknown.push(qid); continue; }
+      for (const key of [qid.slice(0, 2), qid.slice(0, 3)]) {
+        asked.add(key);
+        if (pool.get(qid).answer !== answer) wrong.add(key);
+      }
+    }
+  }
+  return { wrong, asked, unknown };
+}
+
+/* Worst first, then by how much was asked, then by name. */
+function weakest(keys, wrong, asked) {
+  return [...keys].sort((a, b) => {
+    const rateA = wrong.get(a) / asked.get(a);
+    const rateB = wrong.get(b) / asked.get(b);
+    if (rateA !== rateB) return rateB - rateA;
+    if (asked.get(a) !== asked.get(b)) return asked.get(b) - asked.get(a);
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+}
+
+/* Groups beneath their subelement, in the subelement ranking's order.
+
+   Lines the group table up with the subelement table above it, so the groups
+   that drove a subelement's rank sit together under it. */
+function under(groups, rankedSubelements) {
+  const rank = new Map(rankedSubelements.map((name, place) => [name, place]));
+  return [...groups].sort((a, b) => {
+    const byRank = rank.get(a.slice(0, 2)) - rank.get(b.slice(0, 2));
+    return byRank !== 0 ? byRank : a < b ? -1 : a > b ? 1 : 0;
+  });
+}
+
+/* ------------------------------------------------------- answers files ---- */
+
+function poolElement(pool) {
+  return ELEMENTS[pool.keys().next().value[0]];
+}
+
+/* Name a finished session after its element and the time it was taken.
+
+   The element tells you which pool to hand back for scoring; it does not
+   distinguish two releases of the same element, which is what the header
+   inside the file is for. Drills carry their area too, so a glob for the exam
+   files does not collect them. */
+function sessionName(pool, kind) {
+  const now = new Date();
+  const two = (n) => String(n).padStart(2, "0");
+  const stamp = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}_` +
+    `${two(now.getHours())}${two(now.getMinutes())}${two(now.getSeconds())}`;
+  return `${poolElement(pool)}_${kind}_${stamp}.txt`;
+}
+
+function answersText(poolName, given) {
+  const lines = [`${POOL_HEADER} ${poolName}`];
+  for (const [qid, answer] of given) lines.push(`${qid} ${answer}`);
+  return lines.join("\n") + "\n";
+}
+
+/* The pool named in the header, or null, and the answers. */
+function readAnswers(text) {
+  let recorded = null;
+  const given = [];
+  for (let line of text.split(/\r?\n/)) {
+    line = line.trim();
+    if (!line) continue;
+    if (line.startsWith("#")) {
+      if (line.startsWith(POOL_HEADER)) recorded = line.slice(POOL_HEADER.length).trim();
+      continue;
+    }
+    const [qid, answer] = line.split(/\s+/);
+    given.push([qid, (answer || "").toUpperCase()]);
+  }
+  return { recorded, given };
+}
+
+function download(name, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+/* ------------------------------------------------------ reading a pool ---- */
+
+/* One page's text, spacing derived from where the glyphs sit.
+
+   A space goes in where the extractor left a visible gap or moved to another
+   line, and nowhere else: two runs that abut are one word, and inserting a
+   space between them would break both the header match and the words the
+   search link carries. */
+async function pageText(page) {
+  const content = await page.getTextContent();
+  let out = "";
+  let prev = null;
+  for (const item of content.items) {
+    if (item.str === undefined) continue;
+    const x = item.transform[4];
+    const y = item.transform[5];
+    const size = Math.abs(item.transform[3]) || item.height || 10;
+    if (prev) {
+      const sameLine = Math.abs(y - prev.y) < size * 0.5;
+      if (!sameLine || x - (prev.x + prev.width) > size * 0.15) out += " ";
+    }
+    out += item.str;
+    if (item.hasEOL) out += "\n";
+    prev = { x, y, width: item.width };
+  }
+  return out;
+}
+
+/* Every image painted on a page, as a canvas apiece.
+
+   The page is drawn and thrown away first, because the image data only
+   crosses out of the library once something has asked for the page to be
+   painted; before that the names are all there is.
+
+   Soft masks never arrive here: what comes back is the image with its mask
+   already applied, so a pool shipping one mask per figure yields one image
+   per figure rather than two files to tell apart. */
+async function pageImages(page) {
+  const ops = await page.getOperatorList();
+  const named = new Set();
+  const inline = [];
+  for (let i = 0; i < ops.fnArray.length; i++) {
+    const op = ops.fnArray[i];
+    if (op === pdfjs.OPS.paintImageXObject || op === pdfjs.OPS.paintJpegXObject) {
+      named.add(ops.argsArray[i][0]);
+    } else if (op === pdfjs.OPS.paintInlineImageXObject) {
+      inline.push(ops.argsArray[i][0]);
+    }
+  }
+  if (!named.size && !inline.length) return [];
+
+  if (named.size) {
+    const viewport = page.getViewport({ scale: 1 });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+  }
+
+  const images = [...named].map((name) => (page.objs.has(name) ? page.objs.get(name) : null));
+  return images.concat(inline).filter(Boolean).map(toCanvas).filter(Boolean);
+}
+
+function toCanvas(image) {
+  const width = image.width;
+  const height = image.height;
+  if (!width || !height) return null;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, height);
+
+  if (image.bitmap) {
+    ctx.drawImage(image.bitmap, 0, 0);
+    return canvas;
+  }
+
+  const pixels = ctx.createImageData(width, height);
+  const data = image.data;
+  if (!data) return null;
+  const kind = image.kind;
+  for (let i = 0, p = 0; i < width * height; i++) {
+    if (kind === 3) { // RGBA, a byte a channel
+      pixels.data[p++] = data[i * 4];
+      pixels.data[p++] = data[i * 4 + 1];
+      pixels.data[p++] = data[i * 4 + 2];
+      pixels.data[p++] = data[i * 4 + 3];
+    } else if (kind === 2) { // RGB, no alpha
+      pixels.data[p++] = data[i * 3];
+      pixels.data[p++] = data[i * 3 + 1];
+      pixels.data[p++] = data[i * 3 + 2];
+      pixels.data[p++] = 255;
+    } else { // one bit a pixel, packed rows
+      const row = Math.floor(i / width);
+      const column = i % width;
+      const byte = data[row * Math.ceil(width / 8) + (column >> 3)];
+      const on = (byte >> (7 - (column & 7))) & 1;
+      const level = on ? 255 : 0;
+      pixels.data[p++] = level;
+      pixels.data[p++] = level;
+      pixels.data[p++] = level;
+      pixels.data[p++] = 255;
+    }
+  }
+  ctx.putImageData(pixels, 0, 0);
+  return canvas;
+}
+
+function canvasUrl(canvas) {
+  return new Promise((resolve) => canvas.toBlob((blob) => resolve(URL.createObjectURL(blob)), "image/png"));
+}
+
+let tesseractLoading = null;
+
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  if (!tesseractLoading) {
+    tesseractLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = TESSERACT_JS;
+      script.onload = () => resolve(window.Tesseract);
+      script.onerror = () => {
+        tesseractLoading = null; // so reconnecting and trying again is worth doing
+        reject(new Error("the caption reader could not be fetched"));
+      };
+      document.head.appendChild(script);
+    });
+  }
+  return tesseractLoading;
+}
+
+/* Every figure the pool's own questions ask for. */
+function figureLabels(pool) {
+  const every = new RegExp(FIGURE.source, "gi");
+  const labels = new Set();
+  for (const question of pool.values()) {
+    for (const found of question.body.matchAll(every)) labels.add(found[1].toUpperCase());
+  }
+  return [...labels];
+}
+
+/* Letters and digits only, which is all a caption can be trusted for. */
+function bare(said) {
+  return said.toUpperCase().replace(/[^A-Z0-9]+/g, "");
+}
+
+/* The figure label printed in an image, or null.
+
+   The read is matched against the labels the pool asks for rather than
+   against the shape of a label, because recognizing one of a known handful
+   survives damage that reading arbitrary text does not: General's caption
+   comes back as "Figure G71", the hyphen lost, and a pattern wanting one
+   would throw away a figure that was in fact read correctly.
+
+   Retried once in sparse-text mode. Neither mode reads every figure: the
+   automatic one misses the small Smith chart of E9-3, sparse misses E6-3. */
+async function readCaption(worker, canvas, labels) {
+  for (const mode of ["3", "11"]) {
+    await worker.setParameters({ tessedit_pageseg_mode: mode });
+    const { data } = await worker.recognize(canvas);
+    const seen = bare(data.text);
+    const label = labels.find((name) => seen.includes("FIGURE" + bare(name)));
+    if (label) return label;
+  }
+  return null;
+}
+
+/* Figure label to image URL, empty when figures cannot be had.
+
+   Position cannot stand in for the caption: Extra numbers its figures E5-1,
+   E6-1 through E6-3, E7-1 through E7-3, then jumps to E9-1, so nothing about
+   the order is derivable, and a wrong figure shown confidently is worse than
+   no figure at all. */
+async function loadFigures(doc, labels, note) {
+  if (!labels.length) return new Map();
+
+  note("Looking for figures...");
+  const found = [];
+  for (let n = 1; n <= doc.numPages; n++) {
+    for (const canvas of await pageImages(await doc.getPage(n))) found.push(canvas);
+  }
+  if (!found.length) return new Map();
+
+  note(`Reading ${found.length} figure caption(s)...`);
+  const Tesseract = await loadTesseract();
+  const worker = await Tesseract.createWorker("eng");
+  const figures = new Map();
+  try {
+    for (let n = 0; n < found.length; n++) {
+      note(`Reading figure caption ${n + 1} of ${found.length}...`);
+      const label = await readCaption(worker, found[n], labels);
+      if (label && !figures.has(label)) figures.set(label, await canvasUrl(found[n]));
+    }
+  } finally {
+    await worker.terminate();
+  }
+  return figures;
+}
+
+/* The pool's text, and the document it came from when it was a PDF. */
+async function readPool(file, note) {
+  if (!/\.pdf$/i.test(file.name)) return { text: await file.text(), doc: null };
+
+  note("Fetching the PDF reader...");
+  const library = await loadPdfjs().catch(() => {
+    throw new Refused(
+      "Cannot read a PDF: the PDF reader could not be fetched, so this page needs " +
+      "a network for PDF input. Or skip it: paste the pool out of a PDF viewer " +
+      "into a text file and open that instead."
+    );
+  });
+  const data = new Uint8Array(await file.arrayBuffer());
+  const doc = await library.getDocument({ data }).promise;
+  note(`Reading ${doc.numPages} pages...`);
+  let text = "";
+  for (let n = 1; n <= doc.numPages; n++) {
+    text += (await pageText(await doc.getPage(n))) + "\n";
+  }
+  return { text, doc };
+}
+
+/* --------------------------------------------------------- keeping it ---- */
+
+// A pool costs a few seconds to read and its figures a couple more, so it is
+// kept and offered back on the next visit. The database holds one record,
+// replaced whenever another pool is opened. Answers are deliberately not
+// here: a finished session leaves a file, and an unfinished one is discarded.
+const KEPT = "cramfest";
+const KEPT_POOLS = "pools";
+const KEPT_CURRENT = "current";
+
+function database() {
+  return new Promise((resolve, reject) => {
+    const opening = indexedDB.open(KEPT, 1);
+    opening.onupgradeneeded = () => opening.result.createObjectStore(KEPT_POOLS);
+    opening.onsuccess = () => resolve(opening.result);
+    opening.onerror = () => reject(opening.error);
+  });
+}
+
+function inside(db, mode, work) {
+  return new Promise((resolve, reject) => {
+    const deal = db.transaction(KEPT_POOLS, mode);
+    const asked = work(deal.objectStore(KEPT_POOLS));
+    deal.oncomplete = () => resolve(asked && asked.result);
+    deal.onerror = () => reject(deal.error);
+    deal.onabort = () => reject(deal.error);
+  });
+}
+
+/* Put this pool where the next visit will find it, or say why not.
+
+   Figures are stored as the images themselves rather than as the addresses
+   they are shown under, because those addresses die with the page. */
+async function keep({ pool, name, effective, figures }) {
+  const images = [];
+  for (const [label, url] of figures) images.push([label, await (await fetch(url)).blob()]);
+
+  const db = await database();
+  try {
+    await inside(db, "readwrite", (store) =>
+      store.put({ name, effective, questions: [...pool.entries()], figures: images }, KEPT_CURRENT));
+  } finally {
+    db.close();
+  }
+  return true;
+}
+
+async function kept() {
+  const db = await database();
+  try {
+    return await inside(db, "readonly", (store) => store.get(KEPT_CURRENT));
+  } finally {
+    db.close();
+  }
+}
+
+async function forget() {
+  const db = await database();
+  try {
+    await inside(db, "readwrite", (store) => store.delete(KEPT_CURRENT));
+  } finally {
+    db.close();
+  }
+}
+
+/* ---------------------------------------------------------------- view ---- */
+
+const state = {
+  ordered: false,
+  pool: null,
+  poolName: "",
+  figures: new Map(),
+  session: null,
+  saved: null,
+};
+
+const el = (id) => document.getElementById(id);
+const show = (id, on) => el(id).classList.toggle("hidden", !on);
+
+function text(tag, value, className) {
+  const node = document.createElement(tag);
+  node.textContent = value;
+  if (className) node.className = className;
+  return node;
+}
+
+function link(url, label) {
+  const node = document.createElement("a");
+  node.href = url;
+  node.target = "_blank";
+  node.rel = "noopener";
+  node.textContent = label;
+  return node;
+}
+
+/* The question text, with its figure reference turned into a link.
+
+   The reference is linked where it stands, so the words the question already
+   uses are what you click. Where no image can be offered, the reference is
+   left as written and a line naming the figure follows instead: the question
+   always says which figure it wants, so you can be told what to look up
+   regardless. */
+function questionNode(body) {
+  const node = document.createElement("div");
+  node.className = "qbody";
+  const reference = FIGURE.exec(body);
+  if (!reference) {
+    node.textContent = body;
+    return node;
+  }
+
+  const label = reference[1].toUpperCase();
+  const image = state.figures.get(label);
+  if (image === undefined) {
+    node.textContent = `${body}\nRefer to PDF for Figure ${label}`;
+    return node;
+  }
+
+  node.append(body.slice(0, reference.index));
+  const opener = document.createElement("a");
+  opener.href = image;
+  opener.textContent = reference[0];
+  node.append(opener);
+  node.append(body.slice(reference.index + reference[0].length));
+
+  const figure = document.createElement("figure");
+  const picture = document.createElement("img");
+  picture.src = image;
+  picture.alt = `Figure ${label}`;
+  figure.append(picture);
+  figure.hidden = true;
+  node.append(figure);
+
+  opener.addEventListener("click", (event) => {
+    event.preventDefault();
+    figure.hidden = !figure.hidden;
+  });
+  return node;
+}
+
+function missedNode(missed) {
+  const node = document.createElement("div");
+  if (!missed.length) {
+    node.append(text("p", "Nothing missed."));
+    return node;
+  }
+
+  node.append(text("h2", `Missed ${missed.length}`));
+  for (const [qid, ans] of missed) {
+    const question = state.pool.get(qid);
+    const block = document.createElement("div");
+    block.className = "missed";
+    block.append(text("div", `[${qid}] you answered ${ans}, correct is ${question.answer}`, "wrong"));
+    block.append(questionNode(question.body));
+    block.append(link(explainUrl(qid, question.body), "Explain this question"));
+    node.append(block);
+  }
+  return node;
+}
+
+function tableNode(headings, rows) {
+  const table = document.createElement("table");
+  const head = document.createElement("tr");
+  for (const heading of headings) head.append(text("th", heading));
+  table.append(head);
+  for (const row of rows) {
+    const line = document.createElement("tr");
+    row.forEach((cell, n) => {
+      const box = text("td", cell);
+      if (n > 0) box.className = "num";
+      line.append(box);
+    });
+    table.append(line);
+  }
+  return table;
+}
+
+function screen(name) {
+  show("setup", name === "setup" || name === "modes");
+  show("modes", name === "modes");
+  show("quiz", name === "quiz");
+  show("report", name === "report");
+
+  // Which pool is open belongs next to the box that opened it, and there is
+  // no such box on the other screens, where it goes under the title instead.
+  const label = el("pool-label");
+  label.classList.toggle("between", name === "modes");
+  if (name === "modes") el("modes").before(label);
+  else document.querySelector("header").append(label);
+}
+
+/* Move to a screen, leaving the browser's Back button somewhere to go.
+
+   Every move records where it went, so Back walks back through the app
+   rather than straight out of it. A screen reached instead of another,
+   rather than on top of it, replaces the entry: there is no going back into
+   a quiz that has already ended, and none of the ways of arriving at the
+   mode list are worth stepping back through.
+
+   Nothing is written to the address itself. A page opened from disk refuses
+   a changed path, and a hash left behind would outlive the screen it named
+   the moment the page was refreshed. */
+function goTo(name, instead) {
+  screen(name);
+  const entry = { screen: name };
+  if (instead) history.replaceState(entry, "");
+  else history.pushState(entry, "");
+}
+
+/* Back out of a quiz. The attempt is discarded, and one that would have been
+   saved says so, since leaving by the browser's Back is easy to do by
+   accident and lands somewhere that would otherwise look untouched. */
+function leaveQuiz() {
+  const session = state.session;
+  state.session = null;
+  el("mode-note").textContent = session.saveAs
+    ? `Left after ${session.at} of ${session.questions.length}. Nothing saved.`
+    : "";
+}
+
+window.addEventListener("popstate", (event) => {
+  const name = (event.state && event.state.screen) || (state.pool ? "modes" : "setup");
+  if (state.session && name !== "quiz") leaveQuiz();
+  screen(name);
+});
+
+// Only an exam or a drill has anything to lose. A study run keeps nothing
+// and reports nothing, so asking before leaving one would be noise.
+window.addEventListener("beforeunload", (event) => {
+  if (state.session && state.session.saveAs && state.session.given.length) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+});
+
+/* -------------------------------------------------------------- a quiz ---- */
+
+/* Fill an area menu with what this pool holds: the whole pool, every
+   subelement, and every group beneath it.
+
+   The same menu serves both screens. On the mode list it says what to drill
+   or study; in a study run it moves to another area without going back for
+   it. Typing an area was the alternative, and a pool's areas are a list the
+   pool already knows. */
+function fillAreas(menu, pool) {
+  menu.replaceChildren();
+  menu.append(new Option("The whole pool", ""));
+  for (const [subelement, groups] of poolAreas(pool)) {
+    const under = document.createElement("optgroup");
+    under.label = subelement;
+    under.append(new Option(`All of ${subelement}`, subelement));
+    for (const group of groups) under.append(new Option(group, group));
+    menu.append(under);
+  }
+}
+
+function startSession({ questions, feedback, intro, saveAs, report, jump }) {
+  state.session = { questions, feedback, report, saveAs, at: 0, given: [] };
+  el("quiz-intro").textContent = intro;
+  // Only studying steers: an exam is drawn across the whole pool, and a
+  // drill is one area by definition.
+  show("quiz-side", jump !== undefined);
+  if (jump !== undefined) el("quiz-jump").value = jump;
+  // Leaving a run that would have saved something is an abandonment, and
+  // says so on the way out. Leaving one that never would is just leaving.
+  el("quiz-stop").textContent = saveAs ? "Stop" : "Back to the menu";
+  el("mode-note").textContent = "";
+  goTo("quiz");
+  showQuestion();
+}
+
+function showQuestion() {
+  const session = state.session;
+  const qid = session.questions[session.at];
+  const question = state.pool.get(qid);
+
+  el("quiz-head").textContent =
+    `Question ${session.at + 1}/${session.questions.length}  [${qid}]` +
+    (question.reference ? `  (Ref: ${question.reference})` : "");
+
+  const lines = question.body.split("\n");
+  const body = el("quiz-body");
+  body.replaceChildren(questionNode(lines[0]));
+
+  const choices = el("quiz-choices");
+  choices.replaceChildren();
+  for (let n = 0; n < VALID.length; n++) {
+    const button = document.createElement("button");
+    button.textContent = lines[n + 1] || VALID[n] + ".";
+    button.addEventListener("click", () => answer(VALID[n]));
+    choices.append(button);
+  }
+
+  el("quiz-verdict").classList.add("hidden");
+  show("quiz-next", false);
+}
+
+function answer(letter) {
+  const session = state.session;
+  const qid = session.questions[session.at];
+  session.given.push([qid, letter]);
+
+  if (!session.feedback) {
+    advance();
+    return;
+  }
+
+  const question = state.pool.get(qid);
+  const verdict = el("quiz-verdict");
+  verdict.replaceChildren();
+  if (letter === question.answer) {
+    verdict.append(text("div", "Correct.", "correct"));
+  } else {
+    let named = `The answer is ${question.answer}.`;
+    for (const line of question.body.split("\n")) {
+      if (line.startsWith(question.answer + ".")) { named = line; break; }
+    }
+    verdict.append(text("div", `Incorrect. ${named}`, "wrong"));
+  }
+  verdict.append(link(explainUrl(qid, question.body), "Explain this question"));
+  verdict.classList.remove("hidden");
+
+  for (const button of el("quiz-choices").children) button.disabled = true;
+  show("quiz-next", true);
+  el("quiz-next").focus();
+}
+
+function advance() {
+  const session = state.session;
+  session.at += 1;
+  if (session.at < session.questions.length) {
+    showQuestion();
+    return;
+  }
+  finish();
+}
+
+function finish() {
+  const session = state.session;
+  const body = el("report-body");
+  body.replaceChildren();
+
+  if (session.saveAs) {
+    state.saved = { name: session.saveAs, text: answersText(state.poolName, session.given) };
+    download(state.saved.name, state.saved.text);
+    show("report-save", true);
+  } else {
+    state.saved = null;
+    show("report-save", false);
+  }
+
+  session.report(body, session.given);
+  // A session that has been reported on is over. Nothing reads it after
+  // this, and leaving the page no longer costs anything.
+  state.session = null;
+  goTo("report", true);
+}
+
+function stop() {
+  const session = state.session;
+  state.saved = null;
+  state.session = null;
+  show("report-save", false);
+
+  // Nothing was going to be written, so there is nothing to report having
+  // discarded, and the way out is the way back.
+  if (!session.saveAs) {
+    goTo("modes", true);
+    return;
+  }
+
+  const body = el("report-body");
+  body.replaceChildren();
+  body.append(text("h2", `Stopped after ${session.at} of ${session.questions.length}.`));
+  body.append(text("p", "Nothing saved.", "muted"));
+  goTo("report", true);
+}
+
+/* ------------------------------------------------------------- reports ---- */
+
+function reportExam(body, given) {
+  const missed = missedIn(given, state.pool);
+  const total = given.length;
+  const correct = total - missed.length;
+  const needed = passMark(total);
+
+  body.append(text("h2",
+    `Score: ${correct}/${total} = ${(100 * correct / total).toFixed(1)}%   ` +
+    `${correct >= needed ? "PASS" : "FAIL"} (need ${needed}/${total})`,
+    correct >= needed ? "correct" : "wrong"));
+
+  body.append(text("h2", "By subelement"));
+  const seen = counter();
+  const wrong = counter();
+  for (const [qid] of given) seen.add(qid.slice(0, 2));
+  for (const [qid] of missed) wrong.add(qid.slice(0, 2));
+  // Subelement 0 is last in the pool, not first, despite sorting that way.
+  const order = seen.keys().sort((a, b) => {
+    const zeroA = a[1] === "0", zeroB = b[1] === "0";
+    if (zeroA !== zeroB) return zeroA ? 1 : -1;
+    return a < b ? -1 : 1;
+  });
+  body.append(tableNode(["Subelement", "Correct"],
+    order.map((key) => [key, `${seen.get(key) - wrong.get(key)}/${seen.get(key)}`])));
+
+  body.append(missedNode(missed));
+}
+
+/* No pass mark: 74% is an exam threshold and says nothing here. */
+function reportDrill(body, given) {
+  const missed = missedIn(given, state.pool);
+  const total = given.length;
+  const correct = total - missed.length;
+  body.append(text("h2", `Score: ${correct}/${total} = ${(100 * correct / total).toFixed(1)}%`));
+  body.append(missedNode(missed));
+}
+
+/* Nothing is scored and nothing is written: the verdict after each question
+   is the whole output. */
+function reportStudy(body) {
+  body.append(text("h2", "Worked through them all."));
+  body.append(text("p", "Nothing scored and nothing saved: the answers as you went were the point.", "muted"));
+}
+
+function reportWeak(body, files) {
+  const { wrong, asked, unknown } = weakAreas(files, state.pool);
+  if (!asked.keys().length) throw new Refused("No questions in those files are in this pool.");
+
+  const answers = asked.keys().filter((k) => k.length === 2).reduce((sum, k) => sum + asked.get(k), 0);
+  body.append(text("h2", `${answers} answers over ${files.length} file(s)`));
+
+  const subelements = asked.keys().filter((k) => k.length === 2);
+  const groups = asked.keys().filter((k) => k.length === 3 && wrong.get(k));
+  const ranked = weakest(subelements, wrong, asked);
+
+  const rows = (keys) => keys.map((key) => [
+    key,
+    `${(100 * wrong.get(key) / asked.get(key)).toFixed(1)}%`,
+    `${wrong.get(key)} of ${asked.get(key)} wrong`,
+  ]);
+
+  for (const [title, ordered] of [
+    ["By subelement, weakest first", ranked],
+    ["By group, under the subelement ranking", under(groups, ranked)],
+    ["By group, weakest first", weakest(groups, wrong, asked)],
+  ]) {
+    body.append(text("h2", title));
+    if (ordered.length) body.append(tableNode(["Area", "Missed", "Of"], rows(ordered)));
+    else body.append(text("p", "nothing missed", "muted"));
+  }
+
+  if (unknown.length) {
+    body.append(text("p", `Not in this pool, and not counted: ${[...new Set(unknown)].sort().join(", ")}`, "muted"));
+  }
+}
+
+/* --------------------------------------------------------------- wiring --- */
+
+function fail(problem) {
+  el("mode-error").textContent = problem instanceof Refused
+    ? problem.message
+    : `${problem.name}: ${problem.message}`;
+  if (!(problem instanceof Refused)) console.error(problem);
+}
+
+function guard(work) {
+  return (...args) => {
+    el("mode-error").textContent = "";
+    try {
+      return work(...args);
+    } catch (problem) {
+      fail(problem);
+    }
+  };
+}
+
+function areaAndCount() {
+  const area = el("area").value.trim();
+  const raw = el("count").value.trim();
+  return { area, count: raw === "" ? null : Number(raw) };
+}
+
+/* Take up a pool that has been read, whether just now or last time.
+
+   The heading names the exam and the release it is, which is what you want
+   to see at a glance. The filename is kept for the answers files, where it
+   is what says which release an attempt was made against, but it is long and
+   says the same thing twice. A pool whose front matter cannot be read falls
+   back to it, since something has to identify the pool. */
+function poolReady({ pool, name, effective, figures }, note, ending) {
+  state.pool = pool;
+  state.poolName = name;
+  state.figures = figures;
+
+  const element = poolElement(pool);
+  const named = element[0].toUpperCase() + element.slice(1);
+  el("pool-label").textContent = effective ? `${named}, effective ${effective}` : `${named}: ${name}`;
+  el("pool-chosen").textContent = name;
+
+  const groups = new Set([...pool.keys()].map((qid) => qid.slice(0, 3)));
+  note(`${pool.size} questions in ${groups.size} groups. ` +
+    `An exam is ${groups.size} questions, ${passMark(groups.size)} to pass. ` +
+    (figures.size ? `${figures.size} figure(s). ` : "No figures; questions will name them instead. ") +
+    ending);
+  fillAreas(el("area"), pool);
+  fillAreas(el("quiz-jump"), pool);
+  goTo("modes", true);
+}
+
+el("pool-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const status = el("pool-status");
+  const note = (message) => { status.textContent = message; };
+  status.className = "muted";
+  note("Reading the pool...");
+  el("mode-error").textContent = "";
+
+  try {
+    const { text: pooltext, doc } = await readPool(file, note);
+    const pool = loadPool(pooltext, file.name);
+
+    // A text pool holds no images, and a browser that cannot run the reader
+    // cannot tell one extracted image from another, so both leave every
+    // affected question naming its figure instead.
+    let figures = new Map();
+    let trouble = "";
+    if (doc) {
+      try {
+        figures = await loadFigures(doc, figureLabels(pool), note);
+      } catch (problem) {
+        trouble = ` (${problem.message})`;
+      }
+    }
+
+    const read = { pool, name: file.name, effective: poolEffective(pooltext), figures };
+
+    note("Keeping the pool for next time...");
+    const held = await keep(read).catch((problem) => problem.message);
+
+    poolReady(read, note,
+      (trouble ? `Figures unavailable${trouble}. ` : "") +
+      (held === true ? "Kept for next time." : `Not kept for next time (${held}).`));
+    show("pool-forget", held === true);
+  } catch (problem) {
+    state.pool = null;
+    status.className = "err";
+    status.textContent = problem instanceof Refused ? problem.message : `${problem.name}: ${problem.message}`;
+    if (!(problem instanceof Refused)) console.error(problem);
+  }
+});
+
+el("start-exam").addEventListener("click", guard(() => {
+  const exam = buildExam(state.pool);
+  startSession({
+    questions: exam,
+    feedback: false,
+    intro: `${exam.length} questions, one from each group. ${passMark(exam.length)} correct to pass.`,
+    saveAs: sessionName(state.pool, "answers"),
+    report: reportExam,
+  });
+}));
+
+el("start-drill").addEventListener("click", guard(() => {
+  const { area, count } = areaAndCount();
+  if (!area) throw new Refused("Choose a subelement or group to drill. The whole pool "
+    + "is what an exam or a study run asks.");
+  const questions = drillQuestions(state.pool, area, count);
+  startSession({
+    questions,
+    feedback: false,
+    intro: `${questions.length} questions from ${area.toUpperCase()}.`,
+    saveAs: sessionName(state.pool, `drill_${area.toUpperCase()}`),
+    report: reportDrill,
+  });
+}));
+
+/* Study an area, from the mode list or from the menu beside the question.
+
+   The two screens each carry the order switch, because the reason to change
+   it usually arrives once you are already reading: an area you know goes
+   faster shuffled, one you are meeting for the first time reads better the
+   way the pool lays it out. Whichever you touch, the run restarts. */
+function study(area) {
+  const { count } = areaAndCount();
+  const questions = drillQuestions(state.pool, area, count, state.ordered);
+  startSession({
+    questions,
+    feedback: true,
+    intro: `${questions.length} questions${area ? ` from ${area.toUpperCase()}` : ""}, ` +
+      `${state.ordered ? "in pool order" : "shuffled"}, with the answer after each.`,
+    saveAs: null,
+    report: reportStudy,
+    jump: area.toUpperCase(),
+  });
+}
+
+function setOrdered(ordered) {
+  state.ordered = ordered;
+  el("in-order").checked = ordered;
+  el("quiz-order").checked = ordered;
+}
+
+el("start-feedback").addEventListener("click", guard(() => study(areaAndCount().area)));
+el("quiz-jump").addEventListener("change", guard((event) => study(event.target.value)));
+el("in-order").addEventListener("change", (event) => setOrdered(event.target.checked));
+el("quiz-order").addEventListener("change", guard((event) => {
+  setOrdered(event.target.checked);
+  study(el("quiz-jump").value);
+}));
+
+el("quiz-next").addEventListener("click", guard(advance));
+el("quiz-stop").addEventListener("click", guard(stop));
+el("report-back").addEventListener("click", () => history.back());
+el("report-save").addEventListener("click", () => {
+  if (state.saved) download(state.saved.name, state.saved.text);
+});
+
+el("pool-pick").addEventListener("click", () => el("pool-file").click());
+el("pick-score").addEventListener("click", () => el("score-file").click());
+el("pick-weak").addEventListener("click", () => el("weak-files").click());
+
+el("score-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (!file) return;
+  el("mode-error").textContent = "";
+  try {
+    const { recorded, given } = readAnswers(await file.text());
+    const body = el("report-body");
+    body.replaceChildren();
+    body.append(text("p", `Answers recorded against: ${recorded || "unrecorded"}`, "muted"));
+    body.append(text("p", `Scoring against:          ${state.poolName}`, "muted"));
+    reportExam(body, given);
+    state.saved = null;
+    show("report-save", false);
+    goTo("report");
+  } catch (problem) {
+    fail(problem);
+  }
+});
+
+el("weak-files").addEventListener("change", async (event) => {
+  const chosen = [...event.target.files];
+  event.target.value = "";
+  if (!chosen.length) return;
+  el("mode-error").textContent = "";
+  try {
+    const files = [];
+    for (const file of chosen) files.push(readAnswers(await file.text()));
+    const body = el("report-body");
+    body.replaceChildren();
+    reportWeak(body, files);
+    state.saved = null;
+    show("report-save", false);
+    goTo("report");
+  } catch (problem) {
+    fail(problem);
+  }
+});
+
+/* --------------------------------------------------------------- theme ---- */
+
+const THEMES = ["system", "light", "dark"];
+
+function applyTheme(theme) {
+  if (theme === "system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", theme);
+  el("theme-toggle").textContent = `Theme: ${theme}`;
+  localStorage.setItem("cramfest-theme", theme);
+}
+
+el("theme-toggle").addEventListener("click", () => {
+  const now = localStorage.getItem("cramfest-theme") || "system";
+  applyTheme(THEMES[(THEMES.indexOf(now) + 1) % THEMES.length]);
+});
+
+applyTheme(localStorage.getItem("cramfest-theme") || "system");
+
+// The page arrives as one history entry and needs to say which screen that
+// entry is, or the first Back has nothing to read and guesses.
+history.replaceState({ screen: "setup" }, "");
+
+/* ------------------------------------------------------- last time's ---- */
+
+el("pool-forget").addEventListener("click", async () => {
+  await forget();
+  state.pool = null;
+  state.figures = new Map();
+  state.poolName = "";
+  el("pool-label").textContent = "";
+  el("pool-chosen").textContent = "";
+  el("pool-status").textContent = "Forgotten. Open a pool to start again.";
+  el("pool-file").value = "";
+  show("pool-forget", false);
+  goTo("setup", true);
+});
+
+// A browser that will not keep anything still runs the whole tool; it just
+// reads the pool afresh each visit.
+kept().then((record) => {
+  if (!record) return;
+  poolReady({
+    pool: new Map(record.questions),
+    name: record.name,
+    effective: record.effective,
+    figures: new Map(record.figures.map(([label, image]) => [label, URL.createObjectURL(image)])),
+  }, (message) => { el("pool-status").textContent = message; }, "Kept from last time.");
+  show("pool-forget", true);
+}).catch(() => {});
+
+/* Reached from the page's own console, and by the tests. */
+window.cramfest = {
+  loadPool, splitChoices, buildExam, drillQuestions, passMark, asked, explainUrl,
+  missedIn, weakAreas, weakest, under, readAnswers, answersText, sessionName,
+  readPool, pageText, pageImages, loadPdfjs, loadTesseract, state,
+};
+window.dispatchEvent(new Event("cramfest-ready"));
+</script>
+</body>
+</html>

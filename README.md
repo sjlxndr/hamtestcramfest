@@ -1,17 +1,39 @@
 # ham test cram fest
 
-Practice an FCC amateur radio license exam from the official question pool.
+Practice an FCC amateur radio license exam on your own machine, from the
+official question pool. It builds an exam the way a Volunteer Examiner
+Coordinator does: one question drawn at random from each subelement group.
 
-One script, nothing to pip install. Point it at a question pool and it builds an
-exam the way a Volunteer Examiner Coordinator does: one question drawn at random
-from each subelement group in the pool.
+## Start here
 
-```
-python3 cramfest.py --pool <pool>
-```
+Nothing to install, no account, no sign-up. Two steps.
+
+**1. Get a question pool.** The questions are published free by the NCVEC. On
+[their question pool page][pools], open the one for the license you are studying
+for and download the pool PDF: the file named as the pool and syllabus, not the
+separate diagrams or errata file.
+
+**2. [Run it in your browser][run].** Click **Open a pool file**, choose the PDF
+you just downloaded, wait a few seconds while it reads, and take an exam.
+
+Nothing you do leaves your machine. Your pool is read inside the page rather
+than sent anywhere, and your answers are saved to your own downloads folder.
+
+**To keep your own copy**, open [cramfest.html][file] and click the button just
+above the file labeled **Download raw file**. Save it anywhere and double-click
+it whenever you want it; it is one file and it works the same way.
+
+There is a command line version of the same tool, `cramfest.py`, for anyone who
+would rather work that way. Everything from [Synopsis](#synopsis) down is about
+that one; [In a browser](#in-a-browser) is about the page you just opened.
+
+[run]: https://sjlxndr.github.io/hamtestcramfest/cramfest.html
+[file]: https://github.com/sjlxndr/hamtestcramfest/blob/main/cramfest.html
+[pools]: https://www.ncvec.org/index.php/amateur-question-pools
 
 ## Contents
 
+- [Start here](#start-here)
 - [Synopsis](#synopsis)
 - [You supply the question pool](#you-supply-the-question-pool)
 - [Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext)
@@ -21,6 +43,7 @@ python3 cramfest.py --pool <pool>
 - [Drilling one area](#drilling-one-area)
 - [Learning as you go](#learning-as-you-go)
 - [Diagrams](#diagrams)
+- [In a browser](#in-a-browser)
 - [On Windows](#on-windows)
 - [License](#license)
 
@@ -111,7 +134,9 @@ Some questions refer to a diagram, and most exams contain at least one — see
 
 Each missed question ends with an **Explain this question** link, which searches
 the web for that question by its ID. Study sites index the pool that way, so the
-results are usually about the exact question rather than the topic at large.
+results are usually about the exact question rather than the topic at large. The
+search asks why the other three choices are wrong as well as why the answer is
+right, since knowing what rules them out is most of what makes an answer stick.
 
 ## Scoring a saved file
 
@@ -299,6 +324,73 @@ Refer to PDF for Figure T-1
 
 so keep the pool PDF on hand either way. Figures are extracted once and cached
 beside the pool, or in a temporary directory if that is not writable.
+
+## In a browser
+
+`cramfest.html` is the same tool with buttons instead of flags. Open it and pick
+your pool; everything else is the same exam, the same drills, the same scoring.
+
+It runs two ways, and they behave alike. [Hosted][run], nothing is downloaded at
+all, and the PDF is read on a background thread so the page stays responsive
+while it works. Saved to your own disk, it is one self-contained file that opens
+by double-clicking and does the same reading on the thread that draws the page.
+A pool takes the same few seconds to read either way.
+
+Nothing installs, and nothing of this runs on a server: hosted or saved, the page
+is a static file and the work happens in your own browser. The pool is read
+inside the page, and the answers files it saves are the ones `cramfest.py` reads,
+so you can take an exam in the browser and score it at the command line or the
+other way round.
+
+The pool is kept once read, figures included, so a refresh brings it straight
+back instead of reading it again. Opening another pool replaces it, and **Forget
+the kept pool** clears it. Answers are deliberately not kept that way: a finished
+exam leaves a file, and an unfinished one is discarded, exactly as at the command
+line.
+
+Because of that, the browser's own Back button walks back through the app rather
+than out of it: out of a question to the **Menu**, out of a report to the same
+place. Backing out of an exam abandons it and says so, the way pressing `q` does
+at the command line. Anything that would actually leave the page mid-exam, a
+refresh or closing the tab, asks first.
+
+There is no `pdftotext` and no tesseract to install: the page reads the PDF and
+its figures itself, fetching the two libraries that do that from a CDN the first
+time it needs them. That is the only thing it wants a network for, and only for a
+PDF. Hand it a text dump of the pool instead and it fetches nothing at all: every
+mode runs offline, without the figures, exactly as a text pool does at the
+command line.
+
+Buttons stand in for the flags:
+
+| Button | The flag it replaces |
+|---|---|
+| Take an exam | the bare `--pool` run |
+| Drill an area | `--drill <area>`, with **Area** and **Count** |
+| Study with answers | `--feedback`, taking the same two |
+| Score a saved answers file | `--score <answers>` |
+| Weak areas from answers files | `--weak <answers>...` |
+
+The pool it is working from is named in bold on its own line, under the question
+pool box on the menu and under the title everywhere else: the exam and the
+release, read out of the pool's own front matter, as in `General, effective
+7/01/2023 – 6/30/2027`. That is what tells one release of an element from the
+next; the filename is what the answers files record.
+
+**Area** is a menu of what the pool holds rather than something to type: the
+whole pool, each subelement, and each group beneath it. A drill wants one of
+them chosen, and refuses the whole pool, exactly as `--drill` wants an area.
+
+Studying has two things the command line has no place for. **In pool order**
+works through an area the way the pool lays it out instead of shuffled, which
+reads better in an area you are meeting for the first time. And beside each
+question is a **Skip to** menu that moves to another subelement or group without
+going back for it, along with the same order switch, because the reason to
+change it usually arrives once you are already reading. An exam and a drill stay
+shuffled whatever the switch says.
+
+**Theme** follows whatever your system is set to. The button cycles it through
+light and dark and back to following the system, and remembers which you chose.
 
 ## On Windows
 

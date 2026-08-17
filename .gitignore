@@ -1,9 +1,10 @@
-# Only the Python tooling is tracked. Everything else in this directory is
-# derived from the source question pool, a third-party document, or a personal
-# study record. Adding a new tracked file means adding it here first.
+# Only the tooling is tracked. Everything else in this directory is derived
+# from the source question pool, a third-party document, or a personal study
+# record. Adding a new tracked file means adding it here first.
 *
 !/.gitignore
 !/*.py
+!/cramfest.html
 
 # Named individually rather than as !/*.md, which would re-admit the personal
 # quiz results the list above exists to exclude.
