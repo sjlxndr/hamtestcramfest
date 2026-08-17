@@ -67,9 +67,9 @@ does, with a line for each way of asking.
 `cramfest.html` is the whole tool as one web page, driven by buttons. Open it
 and pick your pool.
 
-It runs two ways, and they behave alike. [Hosted][run], nothing is downloaded at
-all, and the PDF is read on a background thread so the page stays responsive
-while it works. Saved to your own disk, it is one self-contained file that opens
+The page itself can be used hosted or saved, and the two behave alike.
+[Hosted][run], nothing is downloaded at all, and the PDF is read on a background
+thread so the page stays responsive while it works. Saved to your own disk, it is one self-contained file that opens
 by double-clicking and does the same reading on the thread that draws the page.
 A pool takes the same few seconds to read either way.
 
