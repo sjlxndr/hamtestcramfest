@@ -237,6 +237,19 @@ const SEARCH_URL = "https://www.google.com/search?q=";
 // and Extra carry the subelement digit, as in G7-1 and E5-1.
 const FIGURE = /figure\s+([TGE][0-9]?-[0-9]+)/i;
 
+// Which release this is, from the pool's own front matter rather than from a
+// filename that may have been renamed. The element heading above it is what
+// keeps this off the many other lines saying "effective": the pools write
+// "effective radiated power" throughout. What follows is not a date in any
+// one shape, so nothing is assumed about it: Technician and General give a
+// range, "7/01/2026 - 6/30/2030", while Extra gives "July 1, 2024".
+const EFFECTIVE = /FCC Element \d Question Pool[^\n]*\n\s*Effective\s+([^\n]+)/i;
+
+function poolEffective(text) {
+  const found = EFFECTIVE.exec(text);
+  return found ? found[1].trim() : null;
+}
+
 class Refused extends Error {}
 
 /* The question and its four choices, or null if all four are not there.
@@ -723,14 +736,14 @@ function inside(db, mode, work) {
 
    Figures are stored as the images themselves rather than as the addresses
    they are shown under, because those addresses die with the page. */
-async function keep(pool, name, figures) {
+async function keep({ pool, name, effective, figures }) {
   const images = [];
   for (const [label, url] of figures) images.push([label, await (await fetch(url)).blob()]);
 
   const db = await database();
   try {
     await inside(db, "readwrite", (store) =>
-      store.put({ name, questions: [...pool.entries()], figures: images }, KEPT_CURRENT));
+      store.put({ name, effective, questions: [...pool.entries()], figures: images }, KEPT_CURRENT));
   } finally {
     db.close();
   }
@@ -760,6 +773,7 @@ async function forget() {
 const state = {
   pool: null,
   poolName: "",
+  poolEffective: null,
   figures: new Map(),
   session: null,
   saved: null,
@@ -1141,20 +1155,30 @@ function areaAndCount() {
   return { area, count: raw === "" ? null : Number(raw) };
 }
 
-/* Take up a pool that has been read, whether just now or last time. */
-function poolReady(pool, name, figures, note, ending) {
+/* Take up a pool that has been read, whether just now or last time.
+
+   The heading names the exam and the release it is, which is what you want
+   to see at a glance. The filename is kept for the answers files, where it
+   is what says which release an attempt was made against, but it is long and
+   says the same thing twice. A pool whose front matter cannot be read falls
+   back to it, since something has to identify the pool. */
+function poolReady({ pool, name, effective, figures }, note, ending) {
   state.pool = pool;
   state.poolName = name;
+  state.poolEffective = effective;
   state.figures = figures;
+
+  const element = poolElement(pool);
+  const named = element[0].toUpperCase() + element.slice(1);
+  el("pool-label").textContent = effective ? `${named}, effective ${effective}` : `${named}: ${name}`;
 
   const groups = new Set([...pool.keys()].map((qid) => qid.slice(0, 3)));
   note(`${pool.size} questions in ${groups.size} groups. ` +
     `An exam is ${groups.size} questions, ${passMark(groups.size)} to pass. ` +
     (figures.size ? `${figures.size} figure(s). ` : "No figures; questions will name them instead. ") +
     ending);
-  el("pool-label").textContent = `${poolElement(pool)}: ${name}`;
-  const element = pool.keys().next().value[0];
-  el("area").placeholder = `${element}8 or ${element}8C`;
+  const letter = pool.keys().next().value[0];
+  el("area").placeholder = `${letter}8 or ${letter}8C`;
   goTo("modes", true);
 }
 
@@ -1184,10 +1208,12 @@ el("pool-file").addEventListener("change", async (event) => {
       }
     }
 
-    note("Keeping the pool for next time...");
-    const held = await keep(pool, file.name, figures).catch((problem) => problem.message);
+    const read = { pool, name: file.name, effective: poolEffective(pooltext), figures };
 
-    poolReady(pool, file.name, figures, note,
+    note("Keeping the pool for next time...");
+    const held = await keep(read).catch((problem) => problem.message);
+
+    poolReady(read, note,
       (trouble ? `Figures unavailable${trouble}. ` : "") +
       (held === true ? "Kept for next time." : `Not kept for next time (${held}).`));
     show("pool-forget", held === true);
@@ -1313,6 +1339,7 @@ el("pool-forget").addEventListener("click", async () => {
   state.pool = null;
   state.figures = new Map();
   state.poolName = "";
+  state.poolEffective = null;
   el("pool-label").textContent = "";
   el("pool-status").textContent = "Forgotten. Open a pool to start again.";
   el("pool-file").value = "";
@@ -1324,9 +1351,12 @@ el("pool-forget").addEventListener("click", async () => {
 // reads the pool afresh each visit.
 kept().then((record) => {
   if (!record) return;
-  const figures = new Map(record.figures.map(([label, image]) => [label, URL.createObjectURL(image)]));
-  poolReady(new Map(record.questions), record.name, figures,
-    (message) => { el("pool-status").textContent = message; }, "Kept from last time.");
+  poolReady({
+    pool: new Map(record.questions),
+    name: record.name,
+    effective: record.effective,
+    figures: new Map(record.figures.map(([label, image]) => [label, URL.createObjectURL(image)])),
+  }, (message) => { el("pool-status").textContent = message; }, "Kept from last time.");
   show("pool-forget", true);
 }).catch(() => {});
 
