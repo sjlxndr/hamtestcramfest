@@ -183,10 +183,11 @@ function loadPdfjs() {
   if (!pdfjsLoading) {
     pdfjsLoading = (async () => {
       const library = await import(PDF_JS);
-      // A worker cannot be started from another origin, so the browser
-      // refuses the CDN address the library hands it. Fetching the source
-      // and passing a blob of it puts the worker back on this page's own
-      // origin.
+      // The library will not load its worker from a CDN address, and a page
+      // opened from disk has no origin it considers its own, so from there
+      // it reads the pool on this thread whatever is set here. Handing over
+      // a blob of the source is what that fallback loads, and is what gets a
+      // real worker when the page is served rather than opened.
       library.GlobalWorkerOptions.workerSrc = URL.createObjectURL(
         new Blob([await (await fetch(PDF_WORKER)).text()], { type: "text/javascript" })
       );
@@ -1033,11 +1034,12 @@ el("pool-file").addEventListener("change", async (event) => {
     // cannot tell one extracted image from another, so both leave every
     // affected question naming its figure instead.
     let figures = new Map();
+    let trouble = "";
     if (doc) {
       try {
         figures = await loadFigures(doc, figureLabels(pool), note);
       } catch (problem) {
-        note(`Figures unavailable (${problem.message}); questions will name them instead.`);
+        trouble = ` (${problem.message})`;
       }
     }
 
@@ -1048,8 +1050,10 @@ el("pool-file").addEventListener("change", async (event) => {
     const groups = new Set([...pool.keys()].map((qid) => qid.slice(0, 3)));
     note(`${pool.size} questions in ${groups.size} groups. ` +
       `An exam is ${groups.size} questions, ${passMark(groups.size)} to pass. ` +
-      (figures.size ? `${figures.size} figure(s) read.` : "No figures; questions will name them instead."));
-    el("pool-label").textContent = `${poolElement(pool)} — ${file.name}`;
+      (figures.size
+        ? `${figures.size} figure(s) read.`
+        : `No figures${trouble}; questions will name them instead.`));
+    el("pool-label").textContent = `${poolElement(pool)}: ${file.name}`;
     const element = pool.keys().next().value[0];
     el("area").placeholder = `${element}8 or ${element}8C`;
     screen("modes");
