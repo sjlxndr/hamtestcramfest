@@ -112,7 +112,9 @@ Some questions refer to a diagram, and most exams contain at least one — see
 
 Each missed question ends with an **Explain this question** link, which searches
 the web for that question by its ID. Study sites index the pool that way, so the
-results are usually about the exact question rather than the topic at large.
+results are usually about the exact question rather than the topic at large. The
+search asks why the other three choices are wrong as well as why the answer is
+right, since knowing what rules them out is most of what makes an answer stick.
 
 ## Scoring a saved file
 
@@ -318,7 +320,7 @@ exam leaves a file, and an unfinished one is discarded, exactly as at the comman
 line.
 
 Because of that, the browser's own Back button walks back through the app rather
-than out of it: out of a question to the mode list, out of a report to the same
+than out of it: out of a question to the **Menu**, out of a report to the same
 place. Backing out of an exam abandons it and says so, the way pressing `q` does
 at the command line. Anything that would actually leave the page mid-exam, a
 refresh or closing the tab, asks first.
@@ -340,8 +342,14 @@ Buttons stand in for the flags:
 | Score a saved answers file | `--score <answers>` |
 | Weak areas from answers files | `--weak <answers>...` |
 
+The pool it is working from is named across the top: the exam and the release,
+read out of the pool's own front matter, as in `General, effective 7/01/2023 –
+6/30/2027`. That is what tells one release of an element from the next; the
+filename is what the answers files record.
+
 **Area** is a menu of what the pool holds rather than something to type: the
-whole pool, each subelement, and each group beneath it.
+whole pool, each subelement, and each group beneath it. A drill wants one of
+them chosen, and refuses the whole pool, exactly as `--drill` wants an area.
 
 Studying has two things the command line has no place for. **In pool order**
 works through an area the way the pool lays it out instead of shuffled, which

@@ -473,9 +473,17 @@ def explain_link(qid, body):
     The question ID leads the query: study sites index the pool by it, so
     it finds material about this exact question rather than the topic in
     general.
+
+    The query asks why the wrong choices are wrong as well as why the right
+    one is right, because knowing what rules out the other three is most of
+    what makes the answer stick, and an explanation that only defends the
+    answer often leaves the plausible distractor unaddressed. The choices
+    themselves still stay out of the query, since they are what a search
+    engine matches worst; the pages the ID finds carry all four.
     """
     query = urllib.parse.quote_plus(
-        f"Explain this ham radio question: {qid} {asked(body)}")
+        f"Explain this ham radio question, and why each of the other answer "
+        f"choices is wrong: {qid} {asked(body)}")
     return hyperlink(SEARCH_URL + query, "Explain this question")
 
 
