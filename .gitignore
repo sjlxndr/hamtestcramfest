@@ -6,6 +6,14 @@
 !/*.py
 !/cramfest.html
 
+# What GitHub Pages needs to render the README as the landing page. The
+# deny-all above reaches into directories, so the path is opened a level at
+# a time before the file itself can be admitted.
+!/_config.yml
+!/assets/
+!/assets/css/
+!/assets/css/style.scss
+
 # Named individually rather than as !/*.md, which would re-admit the personal
 # quiz results the list above exists to exclude.
 !/SPEC.md

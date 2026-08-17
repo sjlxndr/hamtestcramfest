@@ -1,0 +1,13 @@
+# The landing page at sjlxndr.github.io/hamtestcramfest is this repository's
+# README, rendered by GitHub Pages. Naming the theme it was already applying
+# by default is what lets assets/css/style.scss import and extend it rather
+# than replace it.
+theme: jekyll-theme-primer
+
+# cramfest.html is the tool itself and has to reach the built site, so it is
+# deliberately not excluded here. It carries no front matter, which is what
+# keeps Jekyll copying it through untouched rather than wrapping it in the
+# layout this theme gives the README.
+exclude:
+  - cramfest.py
+  - SPEC.md
