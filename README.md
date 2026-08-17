@@ -317,6 +317,12 @@ the kept pool** clears it. Answers are deliberately not kept that way: a finishe
 exam leaves a file, and an unfinished one is discarded, exactly as at the command
 line.
 
+Because of that, the browser's own Back button walks back through the app rather
+than out of it: out of a question to the mode list, out of a report to the same
+place. Backing out of an exam abandons it and says so, the way pressing `q` does
+at the command line. Anything that would actually leave the page mid-exam, a
+refresh or closing the tab, asks first.
+
 There is no `pdftotext` and no tesseract to install: the page reads the PDF and
 its figures itself, fetching the two libraries that do that from a CDN the first
 time it needs them. That is the only thing it wants a network for, and only for a

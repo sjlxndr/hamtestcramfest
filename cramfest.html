@@ -143,6 +143,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
   </div>
   <input type="file" id="score-file" accept=".txt" class="hidden">
   <input type="file" id="weak-files" accept=".txt" multiple class="hidden">
+  <p id="mode-note" class="muted"></p>
   <p id="mode-error" class="err"></p>
 </section>
 
@@ -872,6 +873,50 @@ function screen(name) {
   show("report", name === "report");
 }
 
+/* Move to a screen, leaving the browser's Back button somewhere to go.
+
+   Every move records where it went, so Back walks back through the app
+   rather than straight out of it. A screen reached instead of another,
+   rather than on top of it, replaces the entry: there is no going back into
+   a quiz that has already ended, and none of the ways of arriving at the
+   mode list are worth stepping back through.
+
+   Nothing is written to the address itself. A page opened from disk refuses
+   a changed path, and a hash left behind would outlive the screen it named
+   the moment the page was refreshed. */
+function goTo(name, instead) {
+  screen(name);
+  const entry = { screen: name };
+  if (instead) history.replaceState(entry, "");
+  else history.pushState(entry, "");
+}
+
+/* Back out of a quiz. The attempt is discarded, and one that would have been
+   saved says so, since leaving by the browser's Back is easy to do by
+   accident and lands somewhere that would otherwise look untouched. */
+function leaveQuiz() {
+  const session = state.session;
+  state.session = null;
+  el("mode-note").textContent = session.saveAs
+    ? `Left after ${session.at} of ${session.questions.length}. Nothing saved.`
+    : "";
+}
+
+window.addEventListener("popstate", (event) => {
+  const name = (event.state && event.state.screen) || (state.pool ? "modes" : "setup");
+  if (state.session && name !== "quiz") leaveQuiz();
+  screen(name);
+});
+
+// Only an exam or a drill has anything to lose. A study run keeps nothing
+// and reports nothing, so asking before leaving one would be noise.
+window.addEventListener("beforeunload", (event) => {
+  if (state.session && state.session.saveAs && state.session.given.length) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+});
+
 /* -------------------------------------------------------------- a quiz ---- */
 
 function startSession({ questions, feedback, intro, saveAs, report }) {
@@ -880,7 +925,8 @@ function startSession({ questions, feedback, intro, saveAs, report }) {
   // Leaving a run that would have saved something is an abandonment, and
   // says so on the way out. Leaving one that never would is just leaving.
   el("quiz-stop").textContent = saveAs ? "Stop" : "Back to what now";
-  screen("quiz");
+  el("mode-note").textContent = "";
+  goTo("quiz");
   showQuestion();
 }
 
@@ -965,18 +1011,22 @@ function finish() {
   }
 
   session.report(body, session.given);
-  screen("report");
+  // A session that has been reported on is over. Nothing reads it after
+  // this, and leaving the page no longer costs anything.
+  state.session = null;
+  goTo("report", true);
 }
 
 function stop() {
   const session = state.session;
   state.saved = null;
+  state.session = null;
   show("report-save", false);
 
   // Nothing was going to be written, so there is nothing to report having
   // discarded, and the way out is the way back.
   if (!session.saveAs) {
-    screen("modes");
+    goTo("modes", true);
     return;
   }
 
@@ -984,7 +1034,7 @@ function stop() {
   body.replaceChildren();
   body.append(text("h2", `Stopped after ${session.at} of ${session.questions.length}.`));
   body.append(text("p", "Nothing saved.", "muted"));
-  screen("report");
+  goTo("report", true);
 }
 
 /* ------------------------------------------------------------- reports ---- */
@@ -1105,7 +1155,7 @@ function poolReady(pool, name, figures, note, ending) {
   el("pool-label").textContent = `${poolElement(pool)}: ${name}`;
   const element = pool.keys().next().value[0];
   el("area").placeholder = `${element}8 or ${element}8C`;
-  screen("modes");
+  goTo("modes", true);
 }
 
 el("pool-file").addEventListener("change", async (event) => {
@@ -1187,7 +1237,7 @@ el("start-feedback").addEventListener("click", guard(() => {
 
 el("quiz-next").addEventListener("click", guard(advance));
 el("quiz-stop").addEventListener("click", guard(stop));
-el("report-back").addEventListener("click", () => screen("modes"));
+el("report-back").addEventListener("click", () => history.back());
 el("report-save").addEventListener("click", () => {
   if (state.saved) download(state.saved.name, state.saved.text);
 });
@@ -1209,7 +1259,7 @@ el("score-file").addEventListener("change", async (event) => {
     reportExam(body, given);
     state.saved = null;
     show("report-save", false);
-    screen("report");
+    goTo("report");
   } catch (problem) {
     fail(problem);
   }
@@ -1228,7 +1278,7 @@ el("weak-files").addEventListener("change", async (event) => {
     reportWeak(body, files);
     state.saved = null;
     show("report-save", false);
-    screen("report");
+    goTo("report");
   } catch (problem) {
     fail(problem);
   }
@@ -1252,6 +1302,10 @@ el("theme-toggle").addEventListener("click", () => {
 
 applyTheme(localStorage.getItem("cramfest-theme") || "system");
 
+// The page arrives as one history entry and needs to say which screen that
+// entry is, or the first Back has nothing to read and guesses.
+history.replaceState({ screen: "setup" }, "");
+
 /* ------------------------------------------------------- last time's ---- */
 
 el("pool-forget").addEventListener("click", async () => {
@@ -1263,7 +1317,7 @@ el("pool-forget").addEventListener("click", async () => {
   el("pool-status").textContent = "Forgotten. Open a pool to start again.";
   el("pool-file").value = "";
   show("pool-forget", false);
-  screen("setup");
+  goTo("setup", true);
 });
 
 // A browser that will not keep anything still runs the whole tool; it just
