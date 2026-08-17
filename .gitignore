@@ -13,6 +13,8 @@
 !/assets/
 !/assets/css/
 !/assets/css/style.scss
+!/_layouts/
+!/_layouts/default.html
 
 # Named individually rather than as !/*.md, which would re-admit the personal
 # quiz results the list above exists to exclude.
