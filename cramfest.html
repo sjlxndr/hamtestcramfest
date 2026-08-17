@@ -69,6 +69,7 @@ header h1 { font-size: 1.2rem; margin: 0; flex: 1; }
   margin-top: .6rem;
 }
 #pool-label:empty { display: none; }
+#pool-label.between { max-width: 52rem; margin: 1.25rem auto; }
 h2 { font-size: 1.05rem; margin: 1.5rem 0 .5rem; }
 button {
   font: inherit; color: var(--ink); background: var(--btn);
@@ -183,6 +184,9 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
   <input type="file" id="weak-files" accept=".txt" multiple class="hidden">
   <p id="mode-note" class="muted"></p>
   <p id="mode-error" class="err"></p>
+  <p class="muted"><a href="https://github.com/sjlxndr/hamtestcramfest#readme"
+    target="_blank" rel="noopener">README</a>: what this does, where to get a question
+    pool, and the command line version of the same thing.</p>
 </section>
 
 <section id="quiz" class="panel hidden">
@@ -963,6 +967,13 @@ function screen(name) {
   show("modes", name === "modes");
   show("quiz", name === "quiz");
   show("report", name === "report");
+
+  // Which pool is open belongs next to the box that opened it, and there is
+  // no such box on the other screens, where it goes under the title instead.
+  const label = el("pool-label");
+  label.classList.toggle("between", name === "modes");
+  if (name === "modes") el("modes").before(label);
+  else document.querySelector("header").append(label);
 }
 
 /* Move to a screen, leaving the browser's Back button somewhere to go.
