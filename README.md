@@ -1,17 +1,39 @@
 # ham test cram fest
 
-Practice an FCC amateur radio license exam from the official question pool.
+Practice an FCC amateur radio license exam on your own machine, from the
+official question pool. It builds an exam the way a Volunteer Examiner
+Coordinator does: one question drawn at random from each subelement group.
 
-One script, nothing to pip install. Point it at a question pool and it builds an
-exam the way a Volunteer Examiner Coordinator does: one question drawn at random
-from each subelement group in the pool.
+## Start here
 
-```
-python3 cramfest.py --pool <pool>
-```
+Nothing to install, no account, no sign-up. Two files and three steps.
+
+**1. Get the program.** Open [cramfest.html][file] and click the download button
+just above the file, the one labeled **Download raw file**. Save it somewhere
+you will find it again, such as your Desktop.
+
+**2. Get a question pool.** The questions are published free by the NCVEC. On
+[their question pool page][pools], open the one for the license you are studying
+for and download the pool PDF: the file named as the pool and syllabus, not the
+separate diagrams or errata file.
+
+**3. Open the program.** Double-click the `cramfest.html` you saved. It opens in
+your web browser. Click **Open a pool file**, choose the PDF, wait a few seconds
+while it reads, and take an exam.
+
+Nothing you do leaves your machine. The pool is read inside the page, and your
+answers are saved to your own downloads folder.
+
+There is a command line version of the same tool, `cramfest.py`, for anyone who
+would rather work that way. Everything from [Synopsis](#synopsis) down is about
+that one; [In a browser](#in-a-browser) is about the file you just downloaded.
+
+[file]: https://github.com/sjlxndr/hamtestcramfest/blob/main/cramfest.html
+[pools]: https://www.ncvec.org/index.php/amateur-question-pools
 
 ## Contents
 
+- [Start here](#start-here)
 - [Synopsis](#synopsis)
 - [You supply the question pool](#you-supply-the-question-pool)
 - [Reading a PDF needs pdftotext](#reading-a-pdf-needs-pdftotext)
