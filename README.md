@@ -6,28 +6,28 @@ Coordinator does: one question drawn at random from each subelement group.
 
 ## Start here
 
-Nothing to install, no account, no sign-up. Two files and three steps.
+Nothing to install, no account, no sign-up. Two steps.
 
-**1. Get the program.** Open [cramfest.html][file] and click the download button
-just above the file, the one labeled **Download raw file**. Save it somewhere
-you will find it again, such as your Desktop.
-
-**2. Get a question pool.** The questions are published free by the NCVEC. On
+**1. Get a question pool.** The questions are published free by the NCVEC. On
 [their question pool page][pools], open the one for the license you are studying
 for and download the pool PDF: the file named as the pool and syllabus, not the
 separate diagrams or errata file.
 
-**3. Open the program.** Double-click the `cramfest.html` you saved. It opens in
-your web browser. Click **Open a pool file**, choose the PDF, wait a few seconds
-while it reads, and take an exam.
+**2. [Run it in your browser][run].** Click **Open a pool file**, choose the PDF
+you just downloaded, wait a few seconds while it reads, and take an exam.
 
-Nothing you do leaves your machine. The pool is read inside the page, and your
-answers are saved to your own downloads folder.
+Nothing you do leaves your machine. Your pool is read inside the page rather
+than sent anywhere, and your answers are saved to your own downloads folder.
+
+**To keep your own copy**, open [cramfest.html][file] and click the button just
+above the file labeled **Download raw file**. Save it anywhere and double-click
+it whenever you want it; it is one file and it works the same way.
 
 There is a command line version of the same tool, `cramfest.py`, for anyone who
 would rather work that way. Everything from [Synopsis](#synopsis) down is about
-that one; [In a browser](#in-a-browser) is about the file you just downloaded.
+that one; [In a browser](#in-a-browser) is about the page you just opened.
 
+[run]: https://sjlxndr.github.io/hamtestcramfest/cramfest.html
 [file]: https://github.com/sjlxndr/hamtestcramfest/blob/main/cramfest.html
 [pools]: https://www.ncvec.org/index.php/amateur-question-pools
 
@@ -327,9 +327,13 @@ beside the pool, or in a temporary directory if that is not writable.
 
 ## In a browser
 
-`cramfest.html` is the same tool with buttons instead of flags. Open the file and
-pick your pool; everything else is the same exam, the same drills, the same
-scoring. It is one file, so save it wherever you like and open it from there.
+`cramfest.html` is the same tool with buttons instead of flags. Open it and pick
+your pool; everything else is the same exam, the same drills, the same scoring.
+
+It runs two ways, and they behave alike. [Hosted][run], nothing is downloaded at
+all and the PDF is read on a background thread. Saved to your own disk, it is
+still one self-contained file that opens by double-clicking, and reads the PDF on
+the same thread it draws with, which costs a second or two on a large pool.
 
 Nothing installs and nothing runs on a server. The pool is read inside the page,
 and the answers files it saves are the ones `cramfest.py` reads, so you can take
