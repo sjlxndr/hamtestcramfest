@@ -135,24 +135,55 @@ progress { width: 12rem; }
 .err { color: var(--bad); }
 code { font-family: ui-monospace, Menlo, Consolas, monospace; }
 
-/* The calculator, folded away under the title. Its keys insert text at the
-   caret rather than driving a separate machine, so the field stays typeable
-   whether or not the keys are used. */
-#calc { margin-top: .6rem; font-size: .9rem; }
-#calc summary { color: var(--muted); cursor: pointer; width: max-content; }
-#calc .row { margin-top: .5rem; }
+/* The calculator, folded into the right of the line that says what the
+   session is. Its keys insert text at the caret rather than driving a
+   separate machine, so the field stays typeable whether or not they are used.
+   Everything inside it hangs off the right edge, and the answer keeps its
+   line whether or not there is one, so nothing shifts while typing. */
+.introline { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+.introline #quiz-intro { flex: 1 1 12rem; }
+
+/* Unfolded it hangs over the question rather than pushing it down the page,
+   so the answers stay where the reader last saw them. */
+#quiz { position: relative; }
+#calc {
+  position: absolute; top: 1rem; right: 1rem; z-index: 2;
+  font-size: .9rem; max-width: calc(100% - 2rem);
+}
+#calc[open] {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: .6rem .7rem; margin: -.6rem -.7rem;
+  box-shadow: 0 6px 18px rgb(0 0 0 / .3);
+}
+#calc summary {
+  color: var(--muted); cursor: pointer; width: max-content; margin-left: auto;
+}
+.calcline {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: .3rem; margin-top: .5rem;
+}
 #calc-in, #calc-out { font-family: ui-monospace, Menlo, Consolas, monospace; }
 #calc-in {
   font-size: inherit; color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem;
   width: 16rem;
 }
-#calc-out { font-size: 1rem; }
-#calc-keys { display: flex; gap: 1.25rem; margin-top: .6rem; flex-wrap: wrap; }
+#calc-out { font-size: 1rem; min-height: 1.3em; }
+#calc-keys {
+  display: flex; gap: 1.25rem; margin-top: .6rem;
+  flex-wrap: wrap; justify-content: flex-end;
+}
 #calc-keys > div { display: grid; gap: .3rem; }
 #calc-pad { grid-template-columns: repeat(4, 2.6rem); }
 #calc-fns { grid-template-columns: repeat(2, 3.2rem); }
 #calc-keys button { padding: .4rem 0; font-size: .95rem; }
+
+/* Narrow, there is nothing to hang over: the question would be underneath it.
+   The keys take their own room and push the question down instead. */
+@media (max-width: 46rem) {
+  #calc { position: static; max-width: none; }
+  #calc[open] { box-shadow: none; }
+}
 </style>
 </head>
 <body>
@@ -162,44 +193,6 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
     <h1>Ham Test Cramfest</h1>
     <button id="theme-toggle" title="Light / dark / follow the system">Theme: system</button>
   </div>
-  <details id="calc">
-    <summary>Calculator</summary>
-    <div class="row">
-      <input id="calc-in" type="text" autocomplete="off" spellcheck="false"
-             placeholder="12.6 / 4.7">
-      <span id="calc-out"></span>
-    </div>
-    <div id="calc-keys">
-      <div id="calc-pad">
-        <button data-key="7">7</button>
-        <button data-key="8">8</button>
-        <button data-key="9">9</button>
-        <button data-key="/">&divide;</button>
-        <button data-key="4">4</button>
-        <button data-key="5">5</button>
-        <button data-key="6">6</button>
-        <button data-key="*">&times;</button>
-        <button data-key="1">1</button>
-        <button data-key="2">2</button>
-        <button data-key="3">3</button>
-        <button data-key="-">&minus;</button>
-        <button data-key="0">0</button>
-        <button data-key=".">.</button>
-        <button data-do="back" title="Delete back one">&#9003;</button>
-        <button data-key="+">+</button>
-      </div>
-      <div id="calc-fns">
-        <button data-key="sqrt(" title="Square root">&radic;</button>
-        <button data-key="^" title="To the power of">^</button>
-        <button data-key="log(" title="Logarithm, base 10">log</button>
-        <button data-key="ln(" title="Natural logarithm">ln</button>
-        <button data-key="(">(</button>
-        <button data-key=")">)</button>
-        <button data-key="pi">&pi;</button>
-        <button data-do="clear" title="Clear">C</button>
-      </div>
-    </div>
-  </details>
   <div id="pool-label"></div>
 </header>
 
@@ -247,7 +240,47 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
 </section>
 
 <section id="quiz" class="panel hidden">
-  <div id="quiz-intro" class="muted"></div>
+  <div class="introline">
+    <div id="quiz-intro" class="muted"></div>
+    <details id="calc">
+      <summary>Calculator</summary>
+      <div class="calcline">
+        <input id="calc-in" type="text" autocomplete="off" spellcheck="false"
+               placeholder="12.6 / 4.7">
+        <div id="calc-out"></div>
+      </div>
+      <div id="calc-keys">
+        <div id="calc-pad">
+          <button data-key="7">7</button>
+          <button data-key="8">8</button>
+          <button data-key="9">9</button>
+          <button data-key="/">&divide;</button>
+          <button data-key="4">4</button>
+          <button data-key="5">5</button>
+          <button data-key="6">6</button>
+          <button data-key="*">&times;</button>
+          <button data-key="1">1</button>
+          <button data-key="2">2</button>
+          <button data-key="3">3</button>
+          <button data-key="-">&minus;</button>
+          <button data-key="0">0</button>
+          <button data-key=".">.</button>
+          <button data-do="back" title="Delete back one">&#9003;</button>
+          <button data-key="+">+</button>
+        </div>
+        <div id="calc-fns">
+          <button data-key="sqrt(" title="Square root">&radic;</button>
+          <button data-key="^" title="To the power of">^</button>
+          <button data-key="log(" title="Logarithm, base 10">log</button>
+          <button data-key="ln(" title="Natural logarithm">ln</button>
+          <button data-key="(">(</button>
+          <button data-key=")">)</button>
+          <button data-key="pi">&pi;</button>
+          <button data-do="clear" title="Clear">C</button>
+        </div>
+      </div>
+    </details>
+  </div>
   <div class="qhead" id="quiz-head"></div>
   <div class="beside">
     <div class="asking">

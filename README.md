@@ -97,11 +97,11 @@ Four things belong to the page rather than to the tool:
   leave the page mid-exam, a refresh or closing the tab, asks first.
 - **Theme** follows whatever your system is set to. The button cycles it through
   light and dark and back to following the system, and remembers which you chose.
-- **A calculator** folds out under the title, on every screen and during an
-  exam. Type an expression or click the keys: the four operations, `^` for
-  powers, and keys for square root, base-10 `log`, natural `ln` and pi. The
-  answer appears as you go, and a half-finished expression shows a `?` until it
-  is finished.
+- **A calculator** folds out to the right of the line saying what the session
+  is, on every question of an exam, a drill or a study run. Type an expression
+  or click the keys: the four operations, `^` for powers, and keys for square
+  root, base-10 `log`, natural `ln` and pi. The answer appears as you go, and a
+  half-finished expression shows a `?` until it is finished.
 
 ## At the command line
 
