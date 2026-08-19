@@ -143,17 +143,13 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
 .introline { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
 .introline #quiz-intro { flex: 1 1 12rem; }
 
-/* Unfolded it hangs over the question rather than pushing it down the page,
-   so the answers stay where the reader last saw them. */
-#quiz { position: relative; }
-#calc {
-  position: absolute; top: 1rem; right: 1rem; z-index: 2;
-  font-size: .9rem; max-width: calc(100% - 2rem);
-}
+/* Unfolded it takes its own room and moves the question down, rather than
+   hanging over it. The question has to stay readable while figures from it
+   are being entered, and on a phone anything overlaid covers it. */
+#calc { font-size: .9rem; }
 #calc[open] {
   background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-  padding: .6rem .7rem; margin: -.6rem -.7rem;
-  box-shadow: 0 6px 18px rgb(0 0 0 / .3);
+  padding: .6rem .7rem;
 }
 #calc summary {
   color: var(--muted); cursor: pointer; width: max-content; margin-left: auto;
@@ -177,13 +173,6 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
 #calc-pad { grid-template-columns: repeat(4, 2.6rem); }
 #calc-fns { grid-template-columns: repeat(2, 3.2rem); }
 #calc-keys button { padding: .4rem 0; font-size: .95rem; }
-
-/* Narrow, there is nothing to hang over: the question would be underneath it.
-   The keys take their own room and push the question down instead. */
-@media (max-width: 46rem) {
-  #calc { position: static; max-width: none; }
-  #calc[open] { box-shadow: none; }
-}
 </style>
 </head>
 <body>
