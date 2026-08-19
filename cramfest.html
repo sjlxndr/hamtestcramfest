@@ -134,6 +134,25 @@ figure img {
 progress { width: 12rem; }
 .err { color: var(--bad); }
 code { font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+/* The calculator, folded away under the title. Its keys insert text at the
+   caret rather than driving a separate machine, so the field stays typeable
+   whether or not the keys are used. */
+#calc { margin-top: .6rem; font-size: .9rem; }
+#calc summary { color: var(--muted); cursor: pointer; width: max-content; }
+#calc .row { margin-top: .5rem; }
+#calc-in, #calc-out { font-family: ui-monospace, Menlo, Consolas, monospace; }
+#calc-in {
+  font-size: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem;
+  width: 16rem;
+}
+#calc-out { font-size: 1rem; }
+#calc-keys { display: flex; gap: 1.25rem; margin-top: .6rem; flex-wrap: wrap; }
+#calc-keys > div { display: grid; gap: .3rem; }
+#calc-pad { grid-template-columns: repeat(4, 2.6rem); }
+#calc-fns { grid-template-columns: repeat(2, 3.2rem); }
+#calc-keys button { padding: .4rem 0; font-size: .95rem; }
 </style>
 </head>
 <body>
@@ -143,6 +162,44 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
     <h1>Ham Test Cramfest</h1>
     <button id="theme-toggle" title="Light / dark / follow the system">Theme: system</button>
   </div>
+  <details id="calc">
+    <summary>Calculator</summary>
+    <div class="row">
+      <input id="calc-in" type="text" autocomplete="off" spellcheck="false"
+             placeholder="12.6 / 4.7">
+      <span id="calc-out"></span>
+    </div>
+    <div id="calc-keys">
+      <div id="calc-pad">
+        <button data-key="7">7</button>
+        <button data-key="8">8</button>
+        <button data-key="9">9</button>
+        <button data-key="/">&divide;</button>
+        <button data-key="4">4</button>
+        <button data-key="5">5</button>
+        <button data-key="6">6</button>
+        <button data-key="*">&times;</button>
+        <button data-key="1">1</button>
+        <button data-key="2">2</button>
+        <button data-key="3">3</button>
+        <button data-key="-">&minus;</button>
+        <button data-key="0">0</button>
+        <button data-key=".">.</button>
+        <button data-do="back" title="Delete back one">&#9003;</button>
+        <button data-key="+">+</button>
+      </div>
+      <div id="calc-fns">
+        <button data-key="sqrt(" title="Square root">&radic;</button>
+        <button data-key="^" title="To the power of">^</button>
+        <button data-key="log(" title="Logarithm, base 10">log</button>
+        <button data-key="ln(" title="Natural logarithm">ln</button>
+        <button data-key="(">(</button>
+        <button data-key=")">)</button>
+        <button data-key="pi">&pi;</button>
+        <button data-do="clear" title="Clear">C</button>
+      </div>
+    </div>
+  </details>
   <div id="pool-label"></div>
 </header>
 
@@ -1444,6 +1501,71 @@ el("weak-files").addEventListener("change", async (event) => {
   } catch (problem) {
     fail(problem);
   }
+});
+
+/* ---------------------------------------------------------- calculator ---- */
+
+// Bound as arguments, so an expression sees these names and no others.
+const MATH = {
+  sqrt: Math.sqrt, log: Math.log10, ln: Math.log, abs: Math.abs,
+  sin: Math.sin, cos: Math.cos, tan: Math.tan, pi: Math.PI,
+};
+const EXPRESSION = /^[-+*/^().,0-9a-z\s]*$/i;
+
+function evaluate(said) {
+  if (!said.trim()) return "";
+  if (!EXPRESSION.test(said)) return "?";
+  const body = `"use strict"; return (${said.replace(/\^/g, "**")});`;
+  const answer = new Function(...Object.keys(MATH), body)(...Object.values(MATH));
+  return Number.isFinite(answer) ? String(Number(answer.toPrecision(10))) : "?";
+}
+
+// A half-typed expression is ordinary input rather than a fault: "12 /" shows
+// a ? and becomes an answer on the next keystroke.
+function recalculate() {
+  try {
+    el("calc-out").textContent = evaluate(el("calc-in").value);
+  } catch {
+    el("calc-out").textContent = "?";
+  }
+}
+
+function typeInto(said) {
+  const field = el("calc-in");
+  const from = field.selectionStart, to = field.selectionEnd;
+  field.value = field.value.slice(0, from) + said + field.value.slice(to);
+  const at = from + said.length;
+  field.focus();
+  field.setSelectionRange(at, at);
+  recalculate();
+}
+
+function deleteBack() {
+  const field = el("calc-in");
+  const from = field.selectionStart, to = field.selectionEnd;
+  const start = from === to ? Math.max(0, from - 1) : from;
+  field.value = field.value.slice(0, start) + field.value.slice(to);
+  field.focus();
+  field.setSelectionRange(start, start);
+  recalculate();
+}
+
+el("calc-in").addEventListener("input", recalculate);
+
+// The keys press without taking the caret, so what they insert lands where the
+// reader left off rather than at the end.
+el("calc-keys").addEventListener("mousedown", (event) => event.preventDefault());
+
+el("calc-keys").addEventListener("click", (event) => {
+  const key = event.target.closest("button");
+  if (!key) return;
+  if (key.dataset.do === "back") return deleteBack();
+  if (key.dataset.do === "clear") {
+    el("calc-in").value = "";
+    el("calc-in").focus();
+    return recalculate();
+  }
+  typeInto(key.dataset.key);
 });
 
 /* --------------------------------------------------------------- theme ---- */
