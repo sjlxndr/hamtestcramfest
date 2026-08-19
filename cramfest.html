@@ -173,6 +173,19 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; }
 #calc-pad { grid-template-columns: repeat(4, 2.6rem); }
 #calc-fns { grid-template-columns: repeat(2, 3.2rem); }
 #calc-keys button { padding: .4rem 0; font-size: .95rem; }
+
+/* A touchscreen raises a keyboard of its own the moment the field is tapped,
+   and that keyboard has the digits and the operators. What it has nowhere is
+   the functions, so those are what stays, in one row rather than four.
+   These carry the parent in the selector for weight: `#calc-keys > div` sets
+   the display they are overriding, and a media query adds none of its own. */
+@media (hover: none) and (pointer: coarse) {
+  #calc-keys > #calc-pad { display: none; }
+  #calc-keys > #calc-fns {
+    display: flex; flex-wrap: wrap; justify-content: flex-end;
+  }
+  #calc-fns button { min-width: 3.2rem; }
+}
 </style>
 </head>
 <body>

@@ -101,7 +101,9 @@ Four things belong to the page rather than to the tool:
   is, on every question of an exam, a drill or a study run. Type an expression
   or click the keys: the four operations, `^` for powers, and keys for square
   root, base-10 `log`, natural `ln` and pi. The answer appears as you go, and a
-  half-finished expression shows a `?` until it is finished.
+  half-finished expression shows a `?` until it is finished. On a touchscreen
+  the digits and operators come from the keyboard your phone already raises,
+  so only the function keys are drawn.
 
 ## At the command line
 
